@@ -1,0 +1,51 @@
+npm uninstall -g react-native-cli @react-native-community/cli
+
+npx react-native init AwesomeProject
+
+npx react-native init AwesomeProject --version X.XX.X
+npx react-native init AwesomeTSProject --template react-native-template-typescript
+
+npx react-native start
+
+npx react-native run-android (open this one on second cmd terminal)
+
+choco install -y nodejs-lts openjdk11
+
+choco install -y --force openjdk11
+
+jdk issue. add following line to project/android/gradle.properties
+org.gradle.java.home=C:\\Program Files\\Java\\jdk-11.0.16.1
+
+react-native-dropdown-select-list
+npm i react-native-image-slider-box
+
+***
+PS D:\projects\community\demo2> npm install @react-navigation/native
+
+PS D:\projects\community\demo2> npm install react-native-screens react-native-safe-area-context
+
+PS D:\projects\community\demo2> npm install @react-navigation/native-stack
+
+PS D:\projects\community\demo2> npm install @react-navigation/stack
+
+PS D:\projects\community\demo2> npm install react-native-gesture-handler
+
+PS D:\projects\community\demo2> npm install @react-native-masked-view/masked-view
+
+PS D:\projects\community\demo2> npm install @react-navigation/bottom-tabs
+
+npm install --save-dev @types/react-native-vector-icons
+npm install react-native-svg
+to use vector-icons in android app add following line to bottom of .. android/app/build.gradle
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+to create app logo images under android/app/src/main/res npm i generator-rn-toolbox
+
+drawable folders under "D:\projects\community\demo2\android\app\src\main\res" creatin duplicate resource error when build release
+
+
+
+**
+
+git config --global --add safe.directory <path to repository>
+//detected dubious ownership of repo git

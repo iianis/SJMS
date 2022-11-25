@@ -1,0 +1,45 @@
+useEffect
+useLayoutEffect
+useRef
+useState
+
+
+keytool -list -v -keystore "%USERPROFILE%\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+
+keytool -list -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android
+
+Debug SHA >> FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C
+
+//https://www.youtube.com/watch?v=_msNczBgHUE Firebase phone auth
+
+firebase.google.com
+grab application name from android/app/src/main/AndroidManifest.xml
+package="com.sjms">
+
+npm i --save @react-native-firebase/app
+npm i --save @react-native-firebase/auth
+
+https://rnfirebase.io/
+https://rnfirebase.io/auth/usage
+https://console.cloud.google.com/apis/dashboard?authuser=0&project=sjmss-4c0b9
+
+
+//add following to android/build.gradle, build script dependencies
+classpath 'com.google.gms:google-services:4.3.14'
+
+//add following to android/app/build.gradle .. top of the file
+apply plugin: "com.google.gms.google-services"
+
+prettier issue with spacing.
+>> settings.json
+"prettier.bracketSpacing": false
+
+>> .prettierrc.js
+module.exports = {
+  arrowParens: 'avoid',
+  bracketSameLine: true,
+  bracketSpacing: false,
+  singleQuote: true,
+  trailingComma: 'all',
+  endOfLine: 'auto',
+};
