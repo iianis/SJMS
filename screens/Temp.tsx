@@ -1,126 +1,195 @@
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import Home from './screens/Home';
-import Login from './screens/Login';
-import Register from './screens/Register';
-import MemberDetails from './screens/MemberDetails';
-import Members from './screens/Members';
-import ServiceAreas from './screens/ServiceAreas';
-import WorkInProgress from './screens/WorkInPrgress';
-import Audits from './screens/Audits';
-import Schemes from './screens/Schemes';
-import Districts from './screens/Districts';
-import Talukas from './screens/Talukas';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, FlatList } from 'react-native';
+import { directors } from '../data/directors';
 
-const App2 = () => {
-  const Stack = createNativeStackNavigator();
+const Directors2 = () => {
+  return (
+    <View style={styles.container}>
+      <View>
+        <FlatList
+          style={styles.fl}
+          data={directors}
+          renderItem={() => {
+            return (
+              <View style={styles.carditem}><Text>Hello..</Text></View>
+            )
+          }}
+        />
+      </View>
+    </View>
+  )
+}
+
+export default Directors2;
+
+
+import { Image, ScrollView, TouchableOpacity } from 'react-native';
+import Membersv2 from './Membersv2';
+import IntroCards from './IntroCards';
+//import Dropdown from 'react-native-material-dropdown';
+
+const Intro = ({ navigation }) => {
+  useEffect(() => {
+    //setFilteredTalukas(talukas);
+  }, []);
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Home"
-          component={Home}
-          options={{
-            headerShown: false,
-            headerBackTitleVisible: true,
-            headerBackTitle: '',
-          }}
-        />
-        <Stack.Screen
-          name="Login"
-          component={Login}
-          options={{
-            headerShown: true,
-            headerBackTitleVisible: false,
-            headerBackTitle: '',
-          }}
-        />
-        <Stack.Screen
-          name="Register"
-          component={Register}
-          options={{
-            headerShown: true,
-            headerBackTitleVisible: true,
-            headerBackTitle: '',
-          }}
-        />
-        <Stack.Screen
-          name="ServiceAreas"
-          component={ServiceAreas}
-          options={{
-            headerShown: true,
-            title: 'Service Areas',
-            headerBackTitleVisible: true,
-          }}
-        />
-        <Stack.Screen
-          name="Members"
-          component={Members}
-          options={{
-            headerShown: true,
-            title: 'Members List',
-            headerBackTitleVisible: true,
-          }}
-        />
-        <Stack.Screen
-          name="MemberDetails"
-          component={MemberDetails}
-          options={{
-            headerShown: false,
-            title: 'Member Details',
-            headerBackTitleVisible: true,
-          }}
-        />
-        <Stack.Screen
-          name="Audits"
-          component={Audits}
-          options={{
-            headerShown: false,
-            title: 'Audit 2021-22',
-            headerBackTitleVisible: true,
-          }}
-        />
-        <Stack.Screen
-          name="WorkInProgress"
-          component={WorkInProgress}
-          options={{
-            headerShown: true,
-            title: 'Work In Progress',
-            headerBackTitleVisible: true,
-          }}
-        />
-        <Stack.Screen
-          name="Schemes"
-          component={Schemes}
-          options={{
-            headerShown: true,
-            title: 'Scholarships & Schemes',
-            headerBackTitleVisible: true,
-          }}
-        />
-        <Stack.Screen
-          name="Districts"
-          component={Districts}
-          options={{
-            headerShown: true,
-            title: 'Districts',
-            headerBackTitleVisible: true,
-          }}
-        />
-        <Stack.Screen
-          name="Talukas"
-          component={Talukas}
-          options={{
-            headerShown: true,
-            title: 'Talukas',
-            headerBackTitleVisible: true,
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.container}>
+      <ScrollView nestedScrollEnabled>
+        <View style={styles.sectionMain}>
+          <Image
+            source={require('../images/logo.jpg')}
+            style={styles.logoImage}
+          />
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>We SHIKALGARs</Text>
+        </View>
+        <View style={styles.sectionMain}>
+          <Text style={styles.sectionText}>
+            This organization was formed on 22nd March 1996 to help our
+            community to get benefits from different Government Schemes and
+            spread message of how important education is to our society.
+          </Text>
+        </View>
+        <View style={styles.sectionMain}>
+          <Text style={styles.sectionText}>
+            Our main focus is on Education, HealthCare, and Other needs of our
+            people. We try to reachout to our members who are blessed and doing
+            well by the grace of Allah, to come forward and donate at different
+            occasions & causes like Jakat, Qurbani, Sadaka, and many other
+            voluntary reasons. We use these fund to help our people in need.
+          </Text>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Founder</Text>
+        </View>
+        <View style={styles.sectionMain}>
+          <Image
+            source={require('../images/members/founder.jpg')}
+            style={styles.logoImage}
+          />
+          <Text style={styles.sectionText}>
+            Late Mr. Nijamuddin Shaikhdin, Satara
+          </Text>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Schemes</Text>
+        </View>
+        <View style={styles.sectionMain}>
+          <Text style={styles.sectionText}>
+            Maulana Azad Finance Corporation - Education Loan
+          </Text>
+          <Text style={styles.sectionText}>
+            Nationalized Bank - Education Loan
+          </Text>
+          <Text style={styles.sectionText}>
+            Maulana Azad Education Trust - Scholarship For Girls
+          </Text>
+          <Text style={styles.sectionText}>
+            Sanjay Gandhi Yojana - for Disabled, Widow, and Underpriviledged
+          </Text>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Members</Text>
+        </View>
+        <View style={styles.sectionMain}>
+          <Membersv2 />
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Our Team</Text>
+        </View>
+        <TouchableOpacity style={styles.sectionMain}
+          onPress={() => { navigation.navigate('Directors', { filter: 'director' }); }}>
+          <Image
+            source={require('../images/5.jpg')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.sectionText}>
+            Board of Director's
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.sectionMain}
+          onPress={() => { navigation.navigate('Volunteers', { filter: 'volunteer' }); }}>
+          <Image
+            source={require('../images/members.jpg')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.sectionText}>
+            Taluka Commitee
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.sectionMain}
+          onPress={() => { navigation.navigate('Founders', { filter: 'founder' }); }}>
+          <Image
+            source={require('../images/4.jpg')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.sectionText}>
+            Founder Member's
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.sectionMain}
+          onPress={() => { navigation.navigate('Donations'); }}>
+          <Image
+            source={require('../images/8.jpg')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.sectionText}>
+            Donations
+          </Text>
+        </TouchableOpacity>
+        <View style={styles.sectionMain}>
+          <Text style={styles.sectionHeader}></Text>
+        </View>
+      </ScrollView>
+    </View >
   );
 };
 
-export default App2;
+
+const styles = StyleSheet.create({
+  carditem: {
+    width: '90%', height: '150'
+  },
+  fl: {
+    height: 150, width: '90%'
+  },
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoImage: { width: 250, height: 250, borderRadius: 120, marginVertical: 20 },
+  cardImage: { width: 100, height: 100, borderRadius: 120, marginVertical: 20 },
+  sectionMain: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+  },
+  section: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    marginHorizontal: 15,
+    backgroundColor: '#009387',
+    borderRadius: 20,
+  },
+  sectionHeader: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    borderTopWidth: 0,
+    borderTopColor: 'white',
+  },
+  sectionText: {
+    fontSize: 20,
+    paddingHorizontal: 30,
+    paddingVertical: 3,
+    textAlign: 'justify',
+  },
+});

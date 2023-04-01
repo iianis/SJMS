@@ -5,13 +5,18 @@ import {
   FlatList,
   TouchableOpacity,
   Text,
-  Image,
+  Image, Dimensions
 } from 'react-native';
 import Search from '../components/Search';
 import firestore from '@react-native-firebase/firestore';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+//import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomButton from '../components/CustomButton';
+import Loader from '../components/Loader';
 
-const Members = ({ navigation }) => {
+const Members = ({ navigation, route }) => {
+
+  const { height, width } = Dimensions.get('window');
+  const filter = route.params.filter;
   const [selectedId, setSelectedId] = useState(null);
   const [membersData, setMembersData] = useState([]);
   const [memberData, setMemberData] = useState({
@@ -33,6 +38,7 @@ const Members = ({ navigation }) => {
     donations: '0',
     active: true,
   });
+  const [loading, setLoading] = useState(false);
 
   //console.log(item);
   useEffect(() => {
@@ -41,45 +47,62 @@ const Members = ({ navigation }) => {
   }, []);
 
   const getMembers = async () => {
+    setLoading(true);
+    setMembersData([]);
+
     await firestore()
       .collection('members')
       .orderBy('name')
-      .limit(250)
+      .limit(50)
       .get()
       .then(memberSnapshot => {
-        //console.log(' total members: ' + memberSnapshot.size);
+        console.log(' total members: ' + memberSnapshot.size);
         memberSnapshot.forEach(doc => {
-          //console.log(' record data: ', doc.data());
-          if (doc.exists) {
+          if (doc?.exists) {
             let memberDoc = doc.data();
             memberDoc.id = doc.id;
-            setMembersData(members => [...members, memberDoc]);
+
+            //console.log(' member name: ', memberDoc.name);
+            if (memberDoc.memberType == filter) {
+              //console.log('memberDoc type: ' + memberDoc.memberType + ", filter: " + filter);
+              setMembersData(members => [...members, memberDoc]);
+            } else if (filter && filter == "Member") {
+              setMembersData(members => [...members, memberDoc]);
+            } else if (filter && filter == "Director"
+              && (memberDoc.memberType == "Director" ||
+                memberDoc.memberType == "Secretary" ||
+                memberDoc.memberType == "Treasurer" ||
+                memberDoc.memberType == "President" ||
+                memberDoc.memberType == "Vice-president")) {
+              setMembersData(members => [...members, memberDoc]);
+            }
+            else {
+              console.log('Else memberDoc type: ' + memberDoc.memberType + ", filter: " + filter);
+            }
             //setDocumentId(doc.id);
           } else {
-            //console.log(Math.random().toString(36).toString(7));
-            //setDocumentId(Math.random().toString(36).toString(7));
+            console.log("Error getMembers: Invalid Document");
           }
         });
+        setLoading(false);
       });
-  };
-
-  const updateMember = async () => {
-    await firestore().collection('members').doc(documentId).set(memberData);
   };
 
   const Item = ({ item, onPress, backgroundColor, textColor }) => (
     <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
       <View>
         <Image
-          source={require('../images/profile.jpg')}
+          source={require('../images/members/profile.jpg')}
           style={styles.itemImage}
         />
       </View>
       <View>
         <Text style={[styles.title, textColor]}>{item.name}</Text>
         <View style={styles.cardRow2}>
+          <Text style={[styles.title2, textColor]}>{item.memberType}</Text>
+        </View>
+        <View style={styles.cardRow2}>
           <Text style={[styles.title2, textColor]}>Taluka: {item.taluka}</Text>
-          <Text style={[styles.title2, textColor]}>, {item.memberType}</Text>
         </View>
         <View style={styles.cardRow3}>
           <Text style={[styles.title3, textColor]}>Phone: {item.phone}</Text>
@@ -97,7 +120,7 @@ const Members = ({ navigation }) => {
         item={item}
         onPress={() => {
           setSelectedId(item.id);
-          navigation.navigate('MemberDetails', { item: item });
+          navigation.navigate('MemberNew', { item: item });
         }}
         key={Math.random().toString(36).toString(7)}
         backgroundColor={{ backgroundColor }}
@@ -117,21 +140,12 @@ const filterBySearch = (input: string) => {
 
   return (
     <View style={styles.container}>
+      <Loader visible={loading} />
       <View>
         <Search item={{ placeHolder: 'Search by Name, Taluka, Phone' }} />
-        <TouchableOpacity
-          onPress={() => navigation.navigate('MemberDetails', { item: null })}
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 15,
-            flex: 1,
-            zIndex: 1,
-          }}>
-          <Icon name="add" size={30} color="white" />
-        </TouchableOpacity>
       </View>
-      <View>
+      <CustomButton title="Add New" onPress={() => navigation.navigate('MemberNew', { item: null })} />
+      <View style={[styles.cardContainer]}>
         <FlatList
           data={membersData}
           renderItem={renderItem}
@@ -151,6 +165,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 10,
+    marginBottom: 150,
+    height: 500,
+  },
+  cardContainer: {
+    width: '100%'
   },
   tile1: {
     backgroundColor: 'red',
@@ -160,7 +180,7 @@ const styles = StyleSheet.create({
   },
   item: {
     padding: 10,
-    marginVertical: 5,
+    marginBottom: 5,
     marginHorizontal: 0,
     flexDirection: 'row',
   },
@@ -189,13 +209,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     color: 'lightgrey',
-  },
-  textInput: {
-    borderBottomColor: 'grey',
-    borderWidth: 1,
-    borderRadius: 10,
-    marginTop: 5,
-    width: '100%',
   },
 });
 

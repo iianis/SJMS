@@ -49,3 +49,5 @@ drawable folders under "D:\projects\community\demo2\android\app\src\main\res" cr
 
 git config --global --add safe.directory <path to repository>
 //detected dubious ownership of repo git
+
+npm i --save react-native-element-dropdown

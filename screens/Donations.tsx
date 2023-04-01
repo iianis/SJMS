@@ -1,54 +1,69 @@
 //Member, Registration, Education, Widow Empowerment, Qurbani, Jakat,
-import React, {useState} from 'react';
-import {StyleSheet, View, FlatList, TouchableOpacity, Text} from 'react-native';
-import Search from '../components/Search';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, TouchableOpacity, Text, LogBox } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
+import CustomFlatList from '../components/CustomFlatList';
+import CustomButton from '../components/CustomButton';
+import Loader from '../components/Loader';
 
-const Donations = ({navigation}) => {
-  const [selectedId, setSelectedId] = useState(null);
+const Donations = ({ navigation }) => {
+  const [selectedId, setSelectedId] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [donationData, setDonationData] = useState([{
+    name: '',
+    phone: '',
+    taluka: '',
+    village: '',
+    amount: 0,
+    donationType: '',
+    date: '',
+  }]);
+  const [searchText, setSearchText] = useState('');
 
-  const Item = ({item, onPress, backgroundColor, textColor}) => (
-    <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
-      <Text style={[styles.title, textColor]}>{item.title}</Text>
-      <View style={styles.cardRow2}>
-        <Text style={[styles.title2, textColor]}>Description: {item.desc}</Text>
-        <Text style={[styles.title2, textColor]}>, {item.active}</Text>
-      </View>
-      <View style={styles.cardRow3}>
-        <Text style={[styles.title2, textColor]}>Dates: {item.date}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+    getDonations();
+  }, []);
 
-  const renderItem = ({item}) => {
-    const backgroundColor = item.id === selectedId ? '#F9D162' : '#009387';
-    const color = item.id === selectedId ? 'white' : 'black';
-
-    return (
-      <Item
-        item={item}
-        onPress={() => {
-          setSelectedId(item.id);
-          //navigation.navigate('MemberDetails', {item: item});
-        }}
-        backgroundColor={{backgroundColor}}
-        textColor={{color}}
-      />
-    );
+  const getDonations = async () => {
+    console.log('get donations like.. ', searchText);
+    setLoading(true);
+    await firestore()
+      .collection('donations')
+      .orderBy('donationType', 'desc')
+      .where('donationType', '>=', searchText)
+      .where('donationType', '<=', searchText + '\uf8ff')
+      .limit(10)
+      .get()
+      .then(res => {
+        if (res && res.docs) {
+          //console.log('has data: ', res.docs.length);
+          let docs =
+            res.docs.map(doc => {
+              console.log('has data: ');
+              const data = doc._data;
+              const id = doc.id;
+              return { id, ...data }
+            })
+          setDonationData(docs);
+        } else {
+          console.log('has no data');
+        }
+        setLoading(false);
+      });
   };
+
+  const FilterBySearch = (text: string) => {
+    console.log("searching..", text);
+    setSearchText(text);
+    getDonations();
+  }
 
   return (
     <View style={styles.container}>
-      <View>
-        <Search item={{placeHolder: 'Search by any detail'}} />
-      </View>
-      <View>
-        <FlatList
-          data={donations}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          extraData={selectedId}
-        />
-      </View>
+      <Loader visible={loading} />
+      <CustomButton title="Add New" onPress={() => navigation.navigate('DonationsNew')} />
+      <CustomFlatList data={donationData} selectedId={selectedId} />
     </View>
   );
 };
@@ -56,10 +71,42 @@ const Donations = ({navigation}) => {
 export default Donations;
 
 const styles = StyleSheet.create({
+  textHeader: { color: '#fff', fontSize: 30, fontWeight: 'bold' },
+  textFooter: { fontSize: 16 },
+  textInfo: {
+    fontSize: 20,
+    fontStyle: 'italic',
+    paddingVertical: 10,
+  },
+  button: {
+    fontSize: 16, fontWeight: 'bold',
+    borderRadius: 5,
+    width: 80,
+    height: 30,
+    backgroundColor: 'lightgreen',
+    marginHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  buttonText: {
+    fontSize: 16, fontWeight: 'bold',
+  },
+  formHeader: {
+    fontSize: 20,
+    marginVertical: 10,
+  },
+  action: {
+    flexDirection: 'row',
+    marginTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f2',
+    paddingBottom: 5,
+  },
   container: {
     flex: 1,
     alignContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 10,
   },
   tile1: {
     backgroundColor: 'red',
@@ -93,43 +140,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
   },
+  dropdown: {
+    height: 50,
+    width: 300,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginTop: 10,
+    marginBottom: 15,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  label: {
+    position: 'absolute',
+    backgroundColor: 'white',
+    left: 22,
+    top: 8,
+    zIndex: 999,
+    paddingHorizontal: 8,
+    fontSize: 14,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+  },
 });
-
-export interface donation {
-  id: number;
-  title: string;
-  desc: string;
-  active: boolean;
-  date: string;
-}
-
-export const donations: donation[] = [
-  {
-    id: 1,
-    title: 'Qurbani - Baitul Maal Fund',
-    desc: 'Received Rs.1250/- from Mr. Sakeel N Shikalgar, Waduj',
-    active: true,
-    date: '13/11/2022',
-  },
-  {
-    id: 2,
-    title: 'Education Fund',
-    desc: 'Received Rs.5000/- from Mr. Babubhai Shikalgar, Karad',
-    active: true,
-    date: '30/11/2022',
-  },
-  {
-    id: 3,
-    title: 'Education Fund',
-    desc: 'Received Rs.5000/- from Mr. Rafiqbhai Shikalgar, Koregaon',
-    active: true,
-    date: '2/12/2022',
-  },
-  {
-    id: 4,
-    title: 'Jakat Fund',
-    desc: 'Received Rs.5000/- from Mr. Rafiqbhai Shikalgar, Koregaon',
-    active: true,
-    date: '2/12/2022',
-  },
-];

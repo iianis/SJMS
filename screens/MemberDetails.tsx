@@ -51,7 +51,7 @@ const MemberDetails = ({ route, navigation }) => {
       .then(memberSnapshot => {
         if (memberSnapshot.exists) {
           //console.log(memberSnapshot.data());
-          setMemberData(memberSnapshot.data());
+          //setMemberData(memberSnapshot.data());
           setDocumentId(memberSnapshot.id);
         } else {
           //console.log(Math.random().toString(36).toString(7));
@@ -64,6 +64,7 @@ const MemberDetails = ({ route, navigation }) => {
     console.log('updating..');
     await firestore().collection('members').doc(documentId).set(memberData);
   };
+
   const addMember = async () => {
     console.log('adding..');
     await firestore()

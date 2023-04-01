@@ -165,7 +165,7 @@ const Profile = ({ navigation, route }) => {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('ServiceAreas')}>
           <Image
-            source={require('../images/profile.jpg')}
+            source={require('../images/members/profile.jpg')}
             style={styles.photo}
           />
         </TouchableOpacity>

@@ -19,6 +19,12 @@ import Donations from './screens/Donations';
 import Jobs from './screens/Jobs';
 import Matrimonial from './screens/Matrimonial';
 import Profile from './screens/Profile';
+import Intro from './screens/Intro';
+import Directors from './screens/Directors';
+import Founders from './screens/Founders';
+import Volunteers from './screens/Volunteers';
+import DonationsNew from './screens/DonationsNew';
+import MemberNew from './screens/MemberNew';
 
 const App = () => {
   const Stack = createNativeStackNavigator();
@@ -26,6 +32,15 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen
+          name="Intro"
+          component={Intro}
+          options={{
+            headerShown: false,
+            headerBackTitleVisible: true,
+            headerBackTitle: '',
+          }}
+        />
         <Stack.Screen
           name="Home"
           component={Home}
@@ -63,11 +78,38 @@ const App = () => {
           }}
         />
         <Stack.Screen
+          name="Directors"
+          component={Directors}
+          options={{
+            headerShown: true,
+            title: 'Board of Director\'s',
+            headerBackTitleVisible: true,
+          }}
+        />
+        <Stack.Screen
+          name="Founders"
+          component={Founders}
+          options={{
+            headerShown: true,
+            title: 'Founder Members',
+            headerBackTitleVisible: true,
+          }}
+        />
+        <Stack.Screen
+          name="Volunteers"
+          component={Volunteers}
+          options={{
+            headerShown: true,
+            title: 'Taluka Commitee',
+            headerBackTitleVisible: true,
+          }}
+        />
+        <Stack.Screen
           name="Members"
           component={Members}
           options={{
             headerShown: true,
-            title: 'Members List',
+            title: 'Members',
             headerBackTitleVisible: true,
           }}
         />
@@ -159,6 +201,24 @@ const App = () => {
             headerShown: true,
             title: 'Donations',
             headerBackTitleVisible: true,
+          }}
+        />
+        <Stack.Screen
+          name="DonationsNew"
+          component={DonationsNew}
+          options={{
+            headerShown: true,
+            title: 'Add Donation',
+            headerBackTitleVisible: true,
+          }}
+        />
+        <Stack.Screen
+          name="MemberNew"
+          component={MemberNew}
+          options={{
+            headerShown: false,
+            title: 'Add Member',
+            headerBackTitleVisible: false,
           }}
         />
         <Stack.Screen
