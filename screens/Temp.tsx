@@ -142,6 +142,76 @@ const Intro = ({ navigation }) => {
         <View style={styles.sectionMain}>
           <Text style={styles.sectionHeader}></Text>
         </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Our Family</Text>
+        </View>
+        <View style={styles.sectionMain}>
+          <View style={styles.cardContainer}>
+            <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Members', { filter: "Founder Member" }) }}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Founder Members
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Members', { filter: "Director" }) }}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Directors
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('MemberNew') }}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Taluka Committee
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Members', { filter: "Member" }) }}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Members
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>At your service</Text>
+        </View>
+        <View style={styles.sectionMain}>
+          <View style={styles.cardContainer}>
+            <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('ServiceAreas') }}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Education
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Donations') }}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Fees & Donations
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cardMain}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Meetings
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cardMain}>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardText}>
+                  Need Help?
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </View >
   );
@@ -193,3 +263,5 @@ const styles = StyleSheet.create({
     textAlign: 'justify',
   },
 });
+
+

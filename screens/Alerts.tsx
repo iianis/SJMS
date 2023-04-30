@@ -1,24 +1,60 @@
-import React, {useState} from 'react';
-import {StyleSheet, View, FlatList, TouchableOpacity, Text} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, FlatList, TouchableOpacity, Text } from 'react-native';
+import CustomButton from '../components/CustomButton';
+import Loader from '../components/Loader';
 import Search from '../components/Search';
 
-const Alerts = ({navigation}) => {
-  const [selectedId, setSelectedId] = useState(null);
+import firestore from '@react-native-firebase/firestore';
+import CustomFlatList from '../components/CustomFlatList';
 
-  const Item = ({item, onPress, backgroundColor, textColor}) => (
+const Alerts = ({ navigation }) => {
+  const [selectedId, setSelectedId] = useState(null);
+  const [eventsData, setEventsData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    navigation.addListener('focus', async () => {
+      getEvents();
+    });
+  }, []);
+
+  const getEvents = async () => {
+    setLoading(true);
+    setEventsData([]);
+
+    await firestore()
+      .collection('events')
+      .orderBy('name')
+      .limit(50)
+      .get()
+      .then(eventSnapshot => {
+        eventSnapshot.forEach(doc => {
+          if (doc?.exists) {
+            let itemDoc = doc.data();
+            itemDoc.id = doc.id;
+            setEventsData(events => [...events, itemDoc]);
+
+          } else {
+            console.log("Error getEvents: Invalid Document");
+          }
+        });
+        setLoading(false);
+      });
+  };
+
+  const Item = ({ item, onPress, backgroundColor, textColor }) => (
     <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
-      <Text style={[styles.title, textColor]}>{item.title}</Text>
+      <Text style={[styles.title, textColor]}>{item.eventType}</Text>
       <View style={styles.cardRow2}>
         <Text style={[styles.title2, textColor]}>Description: {item.desc}</Text>
-        <Text style={[styles.title2, textColor]}>, {item.active}</Text>
       </View>
       <View style={styles.cardRow3}>
-        <Text style={[styles.title2, textColor]}>Dates: {item.date}</Text>
+        <Text style={[styles.title2, textColor]}>Date: {item.eventDate}</Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderItem = ({item}) => {
+  const renderItem = ({ item }) => {
     const backgroundColor = item.id === selectedId ? '#F9D162' : '#F4944F';
     const color = item.id === selectedId ? 'white' : 'black';
 
@@ -27,31 +63,29 @@ const Alerts = ({navigation}) => {
         item={item}
         onPress={() => {
           setSelectedId(item.id);
-          //navigation.navigate('MemberDetails', {item: item});
         }}
-        backgroundColor={{backgroundColor}}
-        textColor={{color}}
+        backgroundColor={{ backgroundColor }}
+        textColor={{ color }}
       />
     );
   };
 
   return (
     <View style={styles.container}>
+      <Loader visible={loading} />
       <View>
-        <Search item={{placeHolder: 'Search by any detail'}} />
+        <Search item={{ placeHolder: 'Search by any detail' }} />
       </View>
-      <View>
-        <FlatList
-          data={alerts}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          extraData={selectedId}
-        />
-      </View>
+      <CustomButton title="Add New" onPress={() => navigation.navigate('AlertsNew', { item: null })} />
+      <CustomFlatList data={eventsData} selectedId={selectedId} onSelect={(item) => { handleListSelection(item); }} />
     </View>
   );
 };
 
+const handleListSelection = (item) => {
+  //console.log("list item selected ", item);
+  navigation.navigate('AlertsNew', { item: item });
+};
 export default Alerts;
 
 const styles = StyleSheet.create({
@@ -59,6 +93,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 10,
+    marginBottom: 150,
+    height: 500,
+  },
+  cardContainer: {
+    width: '100%'
   },
   tile1: {
     backgroundColor: 'red',
@@ -68,13 +108,24 @@ const styles = StyleSheet.create({
   },
   item: {
     padding: 10,
-    marginVertical: 10,
-    marginHorizontal: 10,
+    marginBottom: 5,
+    marginHorizontal: 0,
+    flexDirection: 'row',
+  },
+  itemImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+    marginRight: 8,
+    marginTop: 8,
   },
   title: {
-    fontSize: 30,
+    fontSize: 28,
   },
   title2: {
+    fontSize: 18,
+  },
+  title3: {
     fontSize: 16,
   },
   cardRow2: {
@@ -87,34 +138,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     color: 'lightgrey',
   },
-  textInput: {
-    borderBottomColor: 'grey',
-    borderWidth: 1,
-    borderRadius: 10,
-  },
 });
 
-export interface alert {
-  id: number;
-  title: string;
-  desc: string;
-  active: boolean;
-  date: string;
-}
-
-export const alerts: alert[] = [
-  {
-    id: 1,
-    title: 'Emergency Meeting',
-    desc: 'To decide AGM agenda and finalize board members. Venue: Mrs Shamimbi Shikalgar Residence, Rukhmini Garden',
-    active: true,
-    date: '13/11/2022',
-  },
-  {
-    id: 2,
-    title: 'Annual General Meeting',
-    desc: 'Venue: Hotel Shahi, Karad',
-    active: true,
-    date: '23/1/2022',
-  },
-];

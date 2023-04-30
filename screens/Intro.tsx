@@ -1,10 +1,21 @@
 import { Image, StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import InternetConnected from '../components/InternetConnected';
 
 const Intro = ({ navigation }: { navigation: any }) => {
     useEffect(() => {
         //setFilteredTalukas(talukas);
     }, []);
+
+    const cardSelected = (cardName: string) => {
+        switch (cardName) {
+            case "feesdonations": navigation.navigate("Donations"); break;
+            case "alerts": navigation.navigate("Alerts"); break;
+            case "schemes": navigation.navigate("Schemes"); break;
+            case "requests": navigation.navigate("Requests"); break;
+            case "members": navigation.navigate("Members", { filter: "Member" }); break;
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -20,7 +31,7 @@ const Intro = ({ navigation }: { navigation: any }) => {
                 </View>
                 <View style={styles.sectionMain}>
                     <Text style={styles.sectionText}>
-                        Our organization was formed on 22nd March 1996 to help our
+                        This organization was formed on 22nd March 1996 to help our
                         community to get benefits from different Government Schemes and
                         spread message of how important education is to our society.
                     </Text>
@@ -28,10 +39,10 @@ const Intro = ({ navigation }: { navigation: any }) => {
                 <View style={styles.sectionMain}>
                     <Text style={styles.sectionText}>
                         Our main focus is on Education, HealthCare, and Other needs of our
-                        people. We try to reachout to our members who are blessed and doing
-                        well by the grace of Allah, to come forward and contribute at different
-                        occasions/causes like Jakat, Qurbani, Sadaka, and other
-                        voluntary reasons. We use these fund to help our people in need.
+                        community. We try to reachout to our members who are blessed and doing
+                        well by the grace of Allah, to come forward and contribute for different
+                        causes/occasions like Education, Jaqat, Sadaqa, Qurbani, and other
+                        voluntary reasons.
                     </Text>
                 </View>
                 <View style={styles.section}>
@@ -47,76 +58,54 @@ const Intro = ({ navigation }: { navigation: any }) => {
                     </Text>
                 </View>
                 <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Our Family</Text>
+                    <Text style={styles.sectionHeader}>Be part of our Journey</Text>
                 </View>
                 <View style={styles.sectionMain}>
-                    <View style={styles.cardContainer}>
-                        <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Members', { filter: "Founder Member" }) }}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Founder Members
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Members', { filter: "Director" }) }}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Directors
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('MemberNew') }}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Taluka Commitee
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Members', { filter: "Member" }) }}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Members
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                    <Text style={styles.sectionText}>
+                        Please join us on this journey to help our brothers and sisters to achieve their dreams. This would definitely give you a feel of satisfaction in the cause of Almighty.
+                    </Text>
+                </View>
+                <TouchableOpacity onPress={() => { cardSelected("members"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Members</Text>
+                    <Image source={require('../images/members.jpg')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>Contribute and be a part of the change.</Text>
                     </View>
-                </View>
-                <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>At your service</Text>
-                </View>
-                <View style={styles.sectionMain}>
-                    <View style={styles.cardContainer}>
-                        <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('MemberNew') }}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Education
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.cardMain} onPress={() => { navigation.navigate('Donations') }}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Donations
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.cardMain}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Meetings
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.cardMain}>
-                            <View style={styles.cardBody}>
-                                <Text style={styles.cardText}>
-                                    Need Help?
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("alerts"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Alerts & Notifications</Text>
+                    <Image source={require('../images/alerts.png')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Alerts and Notifications for Meetings, Activities, & unforseen Events.</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("requests"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Need Help?</Text>
+                    <Image source={require('../images/requests.png')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>
+                            If you are in a need, please reach out to us by posting a request with due details.
+                            Which inturn would be reviewed by our senior members.</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("feesdonations"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Fees & Donations</Text>
+                    <Image source={require('../images/donations.jpg')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>List of community members.</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("education"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Govt. and Other Schemes</Text>
+                    <Image source={require('../images/scholarships.jpg')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>
+                            Please be informed about government and other private organization schemes for Education, Higher Education, Businesses, and Needy people.
+                        </Text>
+                    </View>
+                </TouchableOpacity>
             </ScrollView>
+            <InternetConnected />
         </View >
     );
 };
@@ -173,5 +162,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     }, cardText: {
         fontSize: 20,
-    }
+    },
+    item: {
+        padding: 10,
+        marginVertical: 10,
+        marginHorizontal: 10,
+        borderRadius: 10,
+    },
+    title: {
+        fontSize: 30,
+    },
+    title2: {
+        fontSize: 16,
+    },
+    cardRow2: {
+        flex: 1,
+        flexDirection: 'row',
+        color: 'lightgrey',
+    },
 });

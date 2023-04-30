@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,20 +9,20 @@ import {
 } from 'react-native';
 
 //import {Members} from ''
-const FuntionalAreas = ({navigation}) => {
+const FuntionalAreas = ({ navigation }) => {
   const [selectedId, setSelectedId] = useState(null);
 
-  const Item = ({item, onPress, backgroundColor, textColor}) => (
+  const Item = ({ item, onPress, backgroundColor, textColor }) => (
     <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
       <Text style={[styles.title, textColor]}>{item.title}</Text>
-      <Image source={item.image} style={{height: 200, width: '100%'}} />
+      <Image source={item.image} style={{ height: 200, width: '100%' }} />
       <View style={styles.cardRow2}>
         <Text style={[styles.title2, textColor]}>{item.desc}</Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderItem = ({item}) => {
+  const renderItem = ({ item }) => {
     const backgroundColor = item.id === selectedId ? '#F9D162' : '#009387';
     const color = item.id === selectedId ? 'white' : 'black';
 
@@ -33,11 +33,11 @@ const FuntionalAreas = ({navigation}) => {
           setSelectedId(item.id);
           navigation.navigate(
             item.component ? item.component : 'WorkInProgress',
-            {item: item},
+            { item: item },
           );
         }}
-        backgroundColor={{backgroundColor}}
-        textColor={{color}}
+        backgroundColor={{ backgroundColor }}
+        textColor={{ color }}
       />
     );
   };
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export interface serviceArea {
+export interface IServiceArea {
   id: number;
   title: string;
   desc: string;
@@ -95,7 +95,7 @@ export interface serviceArea {
   active: boolean;
 }
 
-export const serviceAreas: serviceArea[] = [
+export const serviceAreas: IServiceArea[] = [
   {
     id: 1,
     title: 'Members',
@@ -106,8 +106,8 @@ export const serviceAreas: serviceArea[] = [
   },
   {
     id: 3,
-    title: 'Donations',
-    desc: 'Different ways that we receive donations',
+    title: 'Fees & Donations',
+    desc: 'Contribute and be a part of the change.',
     component: 'Donations',
     active: true,
     image: require('../images/donations.jpg'),
@@ -115,7 +115,7 @@ export const serviceAreas: serviceArea[] = [
   {
     id: 2,
     title: 'Scholarships',
-    desc: 'List & details of Scholarships offered',
+    desc: 'List of Scholarships on offer.',
     component: 'Schemes',
     active: true,
     image: require('../images/scholarships.jpg'),
@@ -124,7 +124,7 @@ export const serviceAreas: serviceArea[] = [
     id: 8,
     title: 'Financials',
     component: 'Audits',
-    desc: 'List of Financial reports.',
+    desc: 'Review and let us know how we are doing.',
     active: true,
     image: require('../images/financials.jpg'),
   },
@@ -132,7 +132,7 @@ export const serviceAreas: serviceArea[] = [
     id: 4,
     title: 'Applications & Requests',
     component: 'Applications',
-    desc: 'You can post a request/applications that reaches to all responsible team members',
+    desc: 'If you are in a need, please reach out to us by posting a request with due details. Which inturn would be reviewed by our senior members.',
     active: true,
     image: require('../images/requests.png'),
   },
@@ -140,7 +140,7 @@ export const serviceAreas: serviceArea[] = [
     id: 7,
     title: 'Alerts & Notifications',
     component: 'Alerts',
-    desc: 'Alerts and Notifications. Meetings, Unforseen Events.',
+    desc: 'Alerts and Notifications for Meetings, Events, & unforseen developments.',
     active: true,
     image: require('../images/alerts.png'),
   },
@@ -148,14 +148,14 @@ export const serviceAreas: serviceArea[] = [
     id: 10,
     title: 'Invitations',
     component: 'Invitations',
-    desc: 'Send or receive invitations.',
+    desc: 'Let us be close to our members by Sending/receiving Invitations of different events.',
     active: true,
     image: require('../images/invitations.jpg'),
   },
   {
     id: 5,
     title: 'Matrimonial',
-    desc: 'This feature is going to help us connect our families to build relations beyond a limit.',
+    desc: 'Let us extend our bonds not just as community but as a family and beyond.',
     active: true,
     component: 'Matrimonial',
     image: require('../images/matrimonial.jpg'),
@@ -164,7 +164,7 @@ export const serviceAreas: serviceArea[] = [
     id: 6,
     title: 'Jobs',
     component: 'Jobs',
-    desc: 'Find list of jobs that may interest you.',
+    desc: 'Check if you find any of these jobs that pushes you out of your comfort zone.',
     active: true,
     image: require('../images/jobs.jpg'),
   },

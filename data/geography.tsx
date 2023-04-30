@@ -557,29 +557,12 @@ export const villages: village[] = [
     },
 ];
 
-export interface work {
-    id: number;
-    name: string;
-}
-
-export const works: work[] = [
-    { id: 1, name: "Business" },
-    { id: 2, name: "Service" },
-    { id: 3, name: "Homemaker" },
-    { id: 4, name: "Retired" },
-    { id: 5, name: "Student" },
-]
-
-export const getTalukaId = (value) => {
+export const getTalukaId = (value: string) => {
     var item = talukas.find(item => item.name == value);
     //console.log("setTaluka on select: " + value + ", getTalukaId: " + item ? item.id : 0);
     return item ? item.id : 0;
 }
-export const getVillageId = (value) => {
+export const getVillageId = (value: string) => {
     var item = villages.find(item => item.name == value);
-    return item ? item.id : 0;
-}
-export const getWorkId = (value) => {
-    var item = works.find(item => item.name == value);
     return item ? item.id : 0;
 }

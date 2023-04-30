@@ -25,6 +25,7 @@ import Founders from './screens/Founders';
 import Volunteers from './screens/Volunteers';
 import DonationsNew from './screens/DonationsNew';
 import MemberNew from './screens/MemberNew';
+import AlertsNew from './screens/AlertsNew';
 
 const App = () => {
   const Stack = createNativeStackNavigator();
@@ -181,7 +182,16 @@ const App = () => {
           component={Alerts}
           options={{
             headerShown: true,
-            title: 'Alerts',
+            title: 'Events',
+            headerBackTitleVisible: true,
+          }}
+        />
+        <Stack.Screen
+          name="AlertsNew"
+          component={AlertsNew}
+          options={{
+            headerShown: false,
+            title: 'Add Alerts',
             headerBackTitleVisible: true,
           }}
         />
@@ -199,7 +209,7 @@ const App = () => {
           component={Donations}
           options={{
             headerShown: true,
-            title: 'Donations',
+            title: 'Fees & Donations',
             headerBackTitleVisible: true,
           }}
         />
@@ -207,7 +217,7 @@ const App = () => {
           name="DonationsNew"
           component={DonationsNew}
           options={{
-            headerShown: true,
+            headerShown: false,
             title: 'Add Donation',
             headerBackTitleVisible: true,
           }}

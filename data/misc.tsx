@@ -1,25 +1,29 @@
-export interface DropdownItem {
-    value: number;
-    label: string;
+export interface ListItem {
+    id: number;
+    name: string;
+    public?: boolean;
+    displayOrder?: number;
 }
 
-export const DonationTypes: DropdownItem[] = [
+export const donationTypes: ListItem[] = [
     {
-        value: 1, label: 'Education'
+        id: 1, name: 'Education'
     }, {
-        value: 2, label: 'Jakat'
+        id: 2, name: 'Jaqat'
     }, {
-        value: 3, label: 'Qurbani'
+        id: 3, name: 'Qurbani'
     }, {
-        value: 4, label: 'Sadaka'
+        id: 4, name: 'Sadaqa'
     }, {
-        value: 5, label: 'Other'
+        id: 5, name: 'Member Fee'
+    }, {
+        id: 6, name: 'Member Yearly'
+    }, {
+        id: 7, name: 'Founder Member'
+    }, {
+        id: 99, name: 'Other'
     },
 ];
-
-export const getDonationType = (label: string) => {
-    return DonationTypes.map(item => item.label == label)
-}
 
 export interface IDonation {
     id?: string;
@@ -27,12 +31,43 @@ export interface IDonation {
     name: string;
     amount: number;
     donationType: string;
-    date: string;
-    enteredBy: string;
+    donationTypeId: number;
     address?: string;
     taluka?: string;
     village?: string;
-    district?: string;
+    villageId?: number;
+    talukaId?: number;
     desc?: string;
+    district?: string;
+    receiptNumber?: string;
+    deleted?: boolean;
+    receivedBy: string;
+    receivedOn: string;
+    updatedBy?: string;
+    updatedOn?: string;
 
 }
+
+export interface IEvent {
+    eventType: string;
+    eventTypeId: number;
+    name?: string;
+    description: string;
+    deleted: boolean;
+    eventDate: string;
+    eventExpires?: string;
+    createdOn?: string;
+    createdBy?: string;
+    updatedOn?: string;
+    updatedBy?: string;
+}
+
+export const eventTypes: ListItem[] = [
+    { id: 1, name: 'Meeting' },
+    { id: 2, name: 'Wedding' },
+    { id: 3, name: 'Achievements' },
+    { id: 4, name: 'Medical' },
+    { id: 5, name: 'Sports' },
+    { id: 9, name: 'Death' },
+    { id: 99, name: 'Other' },
+];

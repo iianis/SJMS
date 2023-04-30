@@ -1,22 +1,20 @@
-import { View, Text, StyleSheet, Keyboard, Alert, AsyncStorage } from 'react-native'
+import { View, Text, StyleSheet, Keyboard, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Colors } from 'react-native/Libraries/NewAppScreen'
 import { ScrollView } from 'react-native-gesture-handler'
 import CustomTextInput from '../components/CustomTextInput'
 import CustomButton from '../components/CustomButton'
 import Loader from '../components/Loader'
-//import { NavigationContainer } from '@react-navigation/native'
 import CustomDropdownList from '../components/CustomDropdownList'
-import { getTalukaId, getVillageId, getWorkId, talukas, villages, works } from '../data/geography'
-import firestore, { collection, query, where } from '@react-native-firebase/firestore';
-import { member } from './Members'
+import { talukas, villages } from '../data/geography'
+import firestore from '@react-native-firebase/firestore';
+import { educations, memberPublicTypes, memberTypes, relations, works } from '../data/members';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const MemberNew = ({ navigation, route }) => {
-    const [documentId, setDocumentId] = useState('');
-    //const [talukaId, setTalukaId] = useState(1);
-    //const [villageId, setVillageId] = useState(1);
-    const [villagesByTaluka, setVillagesByTaluka] = useState([]);
     const item = route.params?.item;
+    const [documentId, setDocumentId] = useState('');
+    const [villagesByTaluka, setVillagesByTaluka] = useState([]);
     const [inputs, setInputs] = useState({
         phone: '',
         name: '',
@@ -28,21 +26,28 @@ const MemberNew = ({ navigation, route }) => {
         address: '',
         pin: '',
         dob: '',
-        work: 'Business',
-        workId: 1,
-        education: 'Graduate',
+        work: 'Other',
+        workId: 99,
+        education: 'Other',
+        educationId: 99,
         memberType: 'Member',
-        familyMembers: 2,
-        fees: 0,
+        memberTypeId: 8,
+        relation: 'Self',
+        relationId: 1,
+        familyMembers: 1,
+        fees: [],
         requests: [],
-        invitaions: [],
-        certificate: false,
-        donations: 0,
+        invitations: [],
+        certificateIssued: false,
+        donations: [],
         active: true,
     });
     //console.log("onrefresh: ", inputs);
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(true);
+    const [dobToggle, setDOBToggle] = useState(false);
+    const [selectedDOB, setSelectedDOB] = useState(new Date());
+    const [selectedDOBText, setSelectedDOBText] = useState("");
 
     const validate = () => {
         Keyboard.dismiss();
@@ -85,7 +90,7 @@ const MemberNew = ({ navigation, route }) => {
                     .collection('members')
                     .add(inputs)
                     .then(res => {
-                        console.log(res);
+                        //console.log(res);
                     });
                 //navigation.navigate('Members', { filter: null });
                 //navigation.navigate("Intro");
@@ -109,16 +114,21 @@ const MemberNew = ({ navigation, route }) => {
     };
 
     useEffect(() => {
-        //console.log("useeffect 1");
         if (item) {
-            //console.log("useeffect 2");
-            getMember();
+            loadMember();
         } else setLoading(false);
     }, []);
 
-    const getMember = async () => {
+    const loadMemberDetails = (data, memberId) => {
+        setInputs(data);
+        handleDOBSet(data.dob.toDate());
+        setSelectedDOB(data.dob.toDate());
+        handleDDLChange("taluka", { id: data.talukaId, name: data.taluka });
+        setDocumentId(memberId);
+    };
+
+    const loadMember = async () => {
         setLoading(true);
-        console.log('getMember > get item: ' + item.id);
         await firestore()
             .collection('members')
             .doc(item.id)
@@ -126,9 +136,7 @@ const MemberNew = ({ navigation, route }) => {
             .then(memberSnapshot => {
                 if (memberSnapshot.exists) {
                     let data = memberSnapshot.data();
-                    setInputs(data);
-                    handleOnChange("taluka", data.taluka);
-                    setDocumentId(memberSnapshot.id);
+                    loadMemberDetails(data, memberSnapshot.id);
                 } else {
                     console.log("No matching member found! documentId: ", documentId);
                     setDocumentId('');
@@ -137,7 +145,7 @@ const MemberNew = ({ navigation, route }) => {
             });
     };
 
-    const getMemberByPhone = async (phone: string) => {
+    const loadMemberByPhone = async (phone: string, familyPhone: boolean = false) => {
         setLoading(true);
         console.log('getMember > by phone: ', phone);
         await firestore()
@@ -145,18 +153,14 @@ const MemberNew = ({ navigation, route }) => {
             .where('phone', '==', phone)
             .get()
             .then(memberSnapshot => {
-                console.log("No matching member found! memberSnapshot: ", memberSnapshot.size);
                 memberSnapshot.forEach(item => {
-                    console.log('data: ', item.id, item.data());
-                    Alert.alert("Already a Member!", item.data().name + ", " + item.data().taluka + ", " + item.data().village + ", Phone - " + item.data().phone,
+                    Alert.alert(familyPhone ? "Head of Family!" : "Registered Member!", item.data().name + ", " + item.data().village + ", Phone - " + item.data().phone,
                         [
                             {
                                 text: 'Ok', onPress: () => {
                                     console.log('Go ahead and load this Member Information');
                                     let data = item.data();
-                                    setDocumentId(item.id);
-                                    setInputs(data);
-                                    handleOnChange("taluka", data.taluka);
+                                    if (!familyPhone) loadMemberDetails(data, item.id);
                                 }
                             },
                             { text: 'Cancel', onPress: () => console.log('Cancel and try different Phone Number') },
@@ -168,32 +172,78 @@ const MemberNew = ({ navigation, route }) => {
                 setLoading(false);
             });
     };
-    const handleOnChange = (field: string, value: number) => {
-        let fieldId = field + 'Id';
-        //console.log('inputs: ' + field + ":" + value);
-        setInputs(prevState => ({ ...prevState, [field]: value }));
-        if (field === 'taluka') {
-            setInputs(prevState => ({ ...prevState, [fieldId]: getTalukaId(value) }));
-            let villagesByFilter = villages.filter(item => { return item.taluka == value; });
-            setVillagesByTaluka(villagesByFilter);
-            //console.log("villagesByTaluka: ", villagesByFilter);
-        }
-        if (field === 'village')
-            setInputs(prevState => ({ ...prevState, [fieldId]: getVillageId(value) }));
-        if (field === 'work')
-            setInputs(prevState => ({ ...prevState, [fieldId]: getWorkId(value) }));
 
-        if (field === 'phone' && value.toString().length == 10) {
-            console.log('inputs: search by phone');
-            let member = getMemberByPhone(value);
+    const handleInputChange = (field: string, item: any) => {
+        setInputs(prevState => ({ ...prevState, [field]: item }));
+
+        if ((field === 'phone' || field == 'familyPhone') && item.toString().length == 10) {
+            loadMemberByPhone(item, field == 'familyPhone'); //name == 'Student' ? name : 'Business'
         }
     }
 
-    const handleError = (field, errorMessage) => {
+    const handleDDLChange = (field: string, changedItem: any) => {
+        let fieldId = field + 'Id';
+        setInputs(prevState => ({ ...prevState, [field]: changedItem.name }));
+        setInputs(prevState => ({ ...prevState, [fieldId]: changedItem.id }));
+        if (field === 'taluka') {
+            let villagesByFilter = villages.filter(item => { return item.taluka == changedItem.name; });
+            setVillagesByTaluka(villagesByFilter);
+        }
+        if (field === 'memberType') {
+            clearFormFields(changedItem);
+        }
+        //setInputs(prevState => ({ ...prevState, [fieldId]: item.id }));
+    }
+
+    const handleError = (field: string, errorMessage: string) => {
         setErrors(prevState => ({ ...prevState, [field]: errorMessage }))
     }
 
-    //console.log('inputs: ', inputs);
+    const handleDOBChange = ((event, dobSelected) => {
+        const dobDate = dobSelected || selectedDOB;
+        setInputs(prevState => ({ ...prevState, ["dob"]: dobDate }));
+        setSelectedDOB(dobDate);
+        let dobInText = dobDate.getDate() + '-' + (dobDate.getMonth() + 1) + '-' + dobDate.getFullYear();
+        setSelectedDOBText(dobInText);
+    });
+
+    const handleDOBSet = ((dobSelected: string) => {
+        let dobInText = dobSelected.getDate() + '-' + (dobSelected.getMonth() + 1) + '-' + dobSelected.getFullYear();
+        setSelectedDOBText(dobInText);
+    });
+
+    const clearFormFields = (member: any) => {
+        setInputs({
+            phone: '',
+            name: '',
+            taluka: '',
+            village: '',
+            talukaId: 0,
+            villageId: 0,
+            district: 'Satara',
+            address: '',
+            pin: '',
+            dob: '',
+            work: 'Other',
+            workId: 99,
+            education: 'Other',
+            educationId: 99,
+            memberType: member.name,
+            memberTypeId: member.id,
+            relation: (member.name == 'Family' ? 'Other' : 'Self'),
+            relationId: (member.name == 'Family' ? 99 : 1),
+            familyMembers: 1,
+            fees: [],
+            requests: [],
+            invitations: [],
+            certificateIssued: false,
+            donations: [],
+            active: true,
+        });
+        setSelectedDOBText('');
+    };
+
+    //console.log('inputs - education : ', inputs.education + "== work : " + inputs.work);
     //console.log('errors: ', errors)
 
     return (
@@ -203,15 +253,46 @@ const MemberNew = ({ navigation, route }) => {
                 <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Member</Text>
                 <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter member details</Text>
                 <View style={{ marginVertical: 20 }}>
+
+                    <CustomDropdownList
+                        data={memberPublicTypes}
+                        label="Member Type"
+                        error={errors.memberType}
+                        selectedId={inputs.memberTypeId || 8}
+                        onChange={item => {
+                            handleDDLChange('memberType', item)
+                        }}
+                    />
+                    {inputs.memberType == 'Family' && <View>
+                        <CustomTextInput
+                            label="Family Phone"
+                            data={inputs.familyPhone}
+                            iconName="phone"
+                            error={errors.familyPhone}
+                            placeholder="Enter family phone"
+                            keyboardType='numeric'
+                            onFocus={() => { handleError('familyPhone', null) }}
+                            onChangeText={text => handleInputChange('familyPhone', text)}
+                        />
+                        <CustomDropdownList
+                            data={relations}
+                            label="Relation"
+                            error={errors.relation}
+                            selectedId={inputs.relationId || 1}
+                            onChange={item => {
+                                handleDDLChange('relation', item)
+                            }}
+                        />
+                    </View>}
                     <CustomTextInput
-                        label="Phone"
+                        label="Member Phone"
                         data={inputs.phone}
                         iconName="phone"
                         error={errors.phone}
-                        placeholder="Enter phone"
+                        placeholder="Enter members phone"
                         keyboardType='numeric'
                         onFocus={() => { handleError('phone', null) }}
-                        onChangeText={text => handleOnChange('phone', text)}
+                        onChangeText={text => handleInputChange('phone', text)}
                     />
                     <CustomTextInput
                         label="Name"
@@ -220,7 +301,7 @@ const MemberNew = ({ navigation, route }) => {
                         error={errors.name}
                         placeholder="Enter name"
                         onFocus={() => { handleError('name', null) }}
-                        onChangeText={text => handleOnChange('name', text)}
+                        onChangeText={text => handleInputChange('name', text)}
                     />
                     <CustomDropdownList
                         data={talukas}
@@ -228,7 +309,7 @@ const MemberNew = ({ navigation, route }) => {
                         error={errors.taluka}
                         selectedId={inputs.talukaId}
                         onChange={item => {
-                            handleOnChange('taluka', item)
+                            handleDDLChange('taluka', item)
                         }}
                     />
                     <CustomDropdownList
@@ -237,18 +318,48 @@ const MemberNew = ({ navigation, route }) => {
                         error={errors.village}
                         selectedId={inputs.villageId}
                         onChange={item => {
-                            handleOnChange('village', item)
+                            handleDDLChange('village', item)
                         }}
                     />
                     <CustomDropdownList
-                        data={works}
-                        label="Work"
-                        error={errors.work}
-                        selectedId={inputs.workId || 1}
-                        onChange={item => {
-                            handleOnChange('work', item)
+                        data={educations}
+                        label="Education"
+                        error={errors.education}
+                        selectedId={inputs.educationId || 1}
+                        onChange={(item: any) => {
+                            handleDDLChange('education', item);
+                            //handleDDLChange('work', item);
                         }}
                     />
+                    {inputs.education != 'Student' && <View>
+                        <CustomDropdownList
+                            data={works}
+                            label="Work"
+                            error={errors.work}
+                            selectedId={inputs.workId || 1}
+                            onChange={item => {
+                                handleDDLChange('work', item)
+                            }}
+                        />
+                    </View>
+                    }
+                    <View style={{ marginTop: 20 }}>
+                        <Text
+                            style={{ fontSize: 14, fontWeight: 'bold' }}
+                            onPress={() => { setDOBToggle(true); }}>
+                            Date of Birth: {selectedDOBText}
+                        </Text>
+                    </View>
+                    {dobToggle && <View><DateTimePicker
+                        value={selectedDOB}
+                        mode="date"
+                        display="default"
+                        onChange={(event, data) => {
+                            setDOBToggle(false);
+                            handleDOBChange(event, data);
+                        }}
+
+                    /></View>}
                     <CustomButton title="Save" onPress={() => validate()} />
                 </View>
             </ScrollView>

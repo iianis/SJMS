@@ -9,46 +9,39 @@ import Loader from '../components/Loader';
 const Donations = ({ navigation }) => {
   const [selectedId, setSelectedId] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [donationData, setDonationData] = useState([{
-    name: '',
-    phone: '',
-    taluka: '',
-    village: '',
-    amount: 0,
-    donationType: '',
-    date: '',
-  }]);
   const [searchText, setSearchText] = useState('');
+  const [donationsData, setDonationsData] = useState([]);
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
-    getDonations();
+    navigation.addListener('focus', async () => {
+      setDonationsData([]);
+      getDonations();
+    });
   }, []);
 
   const getDonations = async () => {
-    console.log('get donations like.. ', searchText);
+    //console.log('get donations like.. ', searchText);
     setLoading(true);
     await firestore()
       .collection('donations')
-      .orderBy('donationType', 'desc')
-      .where('donationType', '>=', searchText)
-      .where('donationType', '<=', searchText + '\uf8ff')
-      .limit(10)
+      .where('deleted', '==', false)
+      .orderBy('receivedOn', 'desc')
+      //.where('donationType', '>=', searchText)
+      //.where('donationType', '<=', searchText + '\uf8ff')
+      .limit(50)
       .get()
-      .then(res => {
-        if (res && res.docs) {
-          //console.log('has data: ', res.docs.length);
-          let docs =
-            res.docs.map(doc => {
-              console.log('has data: ');
-              const data = doc._data;
-              const id = doc.id;
-              return { id, ...data }
-            })
-          setDonationData(docs);
-        } else {
-          console.log('has no data');
-        }
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          if (doc?.exists) {
+            let donationDoc = doc.data();
+            donationDoc.id = doc.id;
+            setDonationsData(donations => [...donations, donationDoc]);
+          } else {
+            console.log('No records found!');
+          }
+          setLoading(false);
+        });
         setLoading(false);
       });
   };
@@ -59,11 +52,16 @@ const Donations = ({ navigation }) => {
     getDonations();
   }
 
+  const handleListSelection = (item) => {
+    //console.log("list item selected ", item);
+    navigation.navigate('DonationsNew', { item: item });
+  };
+
   return (
     <View style={styles.container}>
       <Loader visible={loading} />
-      <CustomButton title="Add New" onPress={() => navigation.navigate('DonationsNew')} />
-      <CustomFlatList data={donationData} selectedId={selectedId} />
+      <CustomButton title="Add New" onPress={() => navigation.navigate('DonationsNew', { item: null })} />
+      <CustomFlatList data={donationsData} selectedId={selectedId} onSelect={(item) => { handleListSelection(item); }} />
     </View>
   );
 };

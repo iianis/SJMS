@@ -51,3 +51,4 @@ git config --global --add safe.directory <path to repository>
 //detected dubious ownership of repo git
 
 npm i --save react-native-element-dropdown
+npm install --save @react-native-community/netinfo

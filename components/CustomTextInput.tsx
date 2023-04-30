@@ -13,7 +13,7 @@ const CustomTextInput = ({ label, data, iconName, error, password, onFocus = () 
     //console.log('textinput ', label, hidePassword, error);
 
     return (
-        <View style={{ marginBottom: 20 }}>
+        <View style={{ marginBottom: 10 }}>
             <Text style={styles.label}>{label}</Text>
             <View style={[styles.inputContainer, { borderColor: error && error != "" ? Colors.red : isFocused ? Colors.blue : Colors.light }]}>
                 <Icon

@@ -41,7 +41,7 @@ const CustomDropdownList = ({ data, label, error, selectedId, placeholder, onCha
                 onBlur={() => setIsFocus(false)}
                 onChange={item => {
                     setValue(item.id);
-                    onChange ? onChange(item.name) : null;
+                    onChange ? onChange(item) : null;
                 }}
                 renderLeftIcon={() => (
                     <Icon
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     },
     container: {
         backgroundColor: 'white',
-        marginBottom: 15,
+        marginBottom: 10,
     },
     dropdown: {
         height: 55,
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 0,
         paddingHorizontal: 8,
-        marginTop: 10,
+        marginTop: 0,
     },
     icon: {
         marginRight: 5,
