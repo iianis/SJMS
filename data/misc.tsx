@@ -54,6 +54,7 @@ export interface IEvent {
     name?: string;
     description: string;
     deleted: boolean;
+    location?: string;
     eventDate: string;
     eventExpires?: string;
     createdOn?: string;
@@ -69,5 +70,51 @@ export const eventTypes: ListItem[] = [
     { id: 4, name: 'Medical' },
     { id: 5, name: 'Sports' },
     { id: 9, name: 'Death' },
+    { id: 10, name: 'Meeting - Annual General' },
+    { id: 11, name: 'Meeting - Director Board' },
+    { id: 12, name: 'Meeting - Adhiveshan' },
     { id: 99, name: 'Other' },
 ];
+
+export interface IRequest {
+    requestType: string;
+    requestTypeId: number;
+    amount: number;
+    phone: string;
+    name: string;
+    description: string;
+    taluka: string;
+    village: string;
+    talukaId: number;
+    villageId: number;
+    district: string;
+    deleted: boolean;
+    approvedOn: string;
+    approved?: boolean;
+    paid?: boolean;
+    createdOn?: string;
+    createdBy?: string;
+    updatedOn?: string;
+    updatedBy?: string;
+}
+
+export const requestTypes: ListItem[] = [
+    { id: 1, name: 'Education' },
+    { id: 2, name: 'Healthcare' },
+    { id: 3, name: 'Business' },
+    { id: 99, name: 'Other' },
+];
+
+export const environments = {
+    Dev: 1,
+    Sandbox: 2,
+    Prod: 3
+}
+
+export const dBTables = {
+    requests: 1,
+    members: 2,
+    donations: 3,
+    alerts: 4,
+    schemes: 5,
+};

@@ -16,13 +16,38 @@ const CustomFlatList = ({ data, selectedId, onSelect }) => {
                 </View>
             }
             {
+                item.requestType && <View style={styles.cardRow2}>
+                    <Text style={[styles.title, textColor]}>{item?.requestType}</Text>
+                </View>
+            }
+            {
                 item.description && <View style={styles.cardRow2}>
                     <Text style={[styles.title2, textColor]}>Description: {item.description}</Text>
                 </View>
             }
             {
-                item.phone && <View style={styles.cardRow2}>
+                item.donationType && item.phone && <View style={styles.cardRow2}>
                     <Text style={[styles.title2, textColor]}>Doner: ******{item.phone.toString().substring(6)}</Text>
+                </View>
+            }
+            {
+                item.requestType && item.phone && <View style={styles.cardRow2}>
+                    <Text style={[styles.title2, textColor]}>Reuested By: ******{item.phone.toString().substring(6)}</Text>
+                </View>
+            }
+            {
+                item.requestType && item.amount && <View style={styles.cardRow2}>
+                    <Text style={[styles.title2, textColor]}>Amount: {item.amount}</Text>
+                </View>
+            }
+            {
+                item.requestType && item.approved == false && <View style={styles.cardRow2}>
+                    <Text style={[styles.title2, textColor]}>Status: {item.approved ? 'Yes' : 'In progress'}</Text>
+                </View>
+            }
+            {
+                item.requestType && item.approved && <View style={styles.cardRow2}>
+                    <Text style={[styles.title2, textColor]}>Approved Date: {item.approvedDate}</Text>
                 </View>
             }
             {
@@ -37,7 +62,7 @@ const CustomFlatList = ({ data, selectedId, onSelect }) => {
             }
             {
                 item.eventDate && <View style={styles.cardRow3}>
-                    <Text style={[styles.title2, textColor]}>Date: {new Date(item.eventDate).toLocaleDateString()}, Place: {item.palce}</Text>
+                    <Text style={[styles.title2, textColor]}>Date: {new Date(item.eventDate.toDate().toString()).toLocaleDateString()}, Place: {item.location}</Text>
                 </View>
             }
         </TouchableOpacity>
@@ -83,7 +108,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     cardContainer: {
-        width: '100%', height: '82%'
+        width: '100%', height: '98%'
     },
     cardRow: {
         padding: 10,

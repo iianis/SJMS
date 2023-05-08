@@ -1,28 +1,30 @@
-export interface member {
-  id: number;
+export interface IMember {
+  id?: number;
   salutation?: string;
   address?: string;
   phone: string;
   name: string;
-  district: string;
-  districtId: number;
   taluka: string;
   talukaId: number;
   village: string;
   villageId: number;
+  district: string;
+  districtId?: number;
   work: string;
   workId: number;
   memberType: string;
   memberTypeId: number;
   certificateIssued?: boolean;
   familyHeadPhone?: string;
+  familyHeadName?: string;
   pin?: string;
   dob?: string;
   familyMembers?: number;
   relation?: string;
   relationId?: number;
   education?: string;
-  edutionId?: number;
+  educationId?: number;
+  deleted: boolean;
 };
 
 export enum memberTypes1 {

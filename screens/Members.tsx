@@ -81,9 +81,12 @@ const Members = ({ navigation, route }) => {
       </View>
       <View>
         <Text style={[styles.title, textColor]}>{item.name}</Text>
-        <View style={styles.cardRow2}>
+        {item.memberType == "Member" && <View style={styles.cardRow2}>
           <Text style={[styles.title2, textColor]}>{item.memberType}</Text>
-        </View>
+        </View>}
+        {item.memberType == "Family" && <View style={styles.cardRow2}>
+          <Text style={[styles.title2, textColor]}>{item.relation} of {item.familyHeadName}</Text>
+        </View>}
         <View style={styles.cardRow2}>
           <Text style={[styles.title2, textColor]}>Taluka: {item.taluka}</Text>
         </View>

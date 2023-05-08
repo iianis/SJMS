@@ -7,9 +7,10 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import firestore from '@react-native-firebase/firestore';
+import { AuthContext } from './AuthContext'
 
 export const ProfileIcon = () => {
   return (
@@ -42,6 +43,7 @@ export const TableRow = ({ item }) => {
 
 const Profile = ({ navigation, route }) => {
   const phone = route.params.item;
+  const { logout } = useContext(AuthContext);
   const [documentId, setDocumentId] = useState('');
   const [memberData, setMemberData] = useState({
     name: '',
@@ -130,7 +132,7 @@ const Profile = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        onPress={() => navigation.navigate('Home')}
+        onPress={() => { navigation.navigate('Intro'); logout(); }}
         style={{
           position: 'absolute',
           right: 5,

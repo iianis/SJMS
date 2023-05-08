@@ -7,6 +7,7 @@ import CustomTextInput from '../components/CustomTextInput';
 import CustomButton from '../components/CustomButton';
 import Loader from '../components/Loader';
 import Colors from '../data/colorscheme';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { talukas, villages } from '../data/geography';
 
 const AlertsNew = ({ navigation, route }) => {
@@ -15,15 +16,20 @@ const AlertsNew = ({ navigation, route }) => {
     const [documentId, setDocumentId] = useState('');
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
-    //const [selectedDOB, setSelectedDOB] = useState(new Date());
-    //const [selectedDOBText, setSelectedDOBText] = useState("");
+    const [selectedDOB, setSelectedDOB] = useState(new Date());
+    const [selectedDOBText, setSelectedDOBText] = useState("");
     const [villagesByTaluka, setVillagesByTaluka] = useState([]);
+    const [datePickerToggle, setDatePickerToggle] = useState(false);
+    const [uiDetails, setUIDetails] = useState({
+        dbTable: "events", redirectComponent: 'Alerts'
+    });
     const [inputs, setInputs] = useState<IEvent>({
         name: '',
         description: '',
         eventType: 'Meeting',
         eventTypeId: 1,
         deleted: false,
+        location: 'Satara',
         eventDate: '',
         createdOn: new Date().toString(),
         createdBy: 'Admin',
@@ -36,7 +42,8 @@ const AlertsNew = ({ navigation, route }) => {
     useEffect(() => {
         if (item) {
             setInputs(item);
-            handleDDLChange("taluka", { id: item.talukaId, name: item.taluka });
+            handleDOBSet(item.eventDate);
+            //handleDDLChange("taluka", { id: item.talukaId, name: item.taluka });
             setDocumentId(item.id);
         } else {
             setLoading(false);
@@ -45,17 +52,25 @@ const AlertsNew = ({ navigation, route }) => {
 
     const validate = () => {
         Keyboard.dismiss();
-        console.log('validation..', inputs);
+        //console.log('validation..', inputs);
         let valid = true;
 
         if (!inputs.description) {
             handleError('description', 'Please enter description');
             valid = false;
         }
+        if (!inputs.eventDate) {
+            handleError('eventDate', 'Please enter event date');
+            valid = false;
+        }
+        if (!inputs.location) {
+            handleError('location', 'Please enter event location');
+            valid = false;
+        }
 
         //console.log('saving event..valid', valid);
         if (valid) {
-            console.log('saving event..documentId', documentId);
+            //console.log('saving event..documentId', documentId);
             if (documentId) update(); else save();
         }
     }
@@ -67,7 +82,7 @@ const AlertsNew = ({ navigation, route }) => {
             setLoading(false);
             try {
                 await firestore()
-                    .collection('events')
+                    .collection(uiDetails.dbTable)
                     .add(inputs)
                     .then(res => {
                         //console.log(res);
@@ -76,7 +91,7 @@ const AlertsNew = ({ navigation, route }) => {
                 Alert.alert("Error", "Event Save - Something went wrong.");
                 console.log(error);
             } finally {
-                navigation.navigate('Alerts', { filter: null });
+                navigation.navigate(uiDetails.redirectComponent, { filter: null });
             }
         }, 3000)
     };
@@ -86,43 +101,31 @@ const AlertsNew = ({ navigation, route }) => {
         try {
             inputs.updatedBy = '';
             inputs.updatedOn = new Date().toString();
-            await firestore().collection('events').doc(documentId).set(inputs);
+            await firestore().collection(uiDetails.dbTable).doc(documentId).set(inputs);
         } catch (error) {
             Alert.alert("Error", "Event Update - Something went wrong.");
         } finally {
-            navigation.navigate('Alerts', { filter: null });
+            navigation.navigate(uiDetails.redirectComponent, { filter: null });
         }
 
     };
 
     const deleteEvent = async () => {
         setLoading(true);
+        console.log('deleting..', documentId);
+        console.log('deleting..', inputs);
         try {
             inputs.deleted = true;
-            await firestore().collection('events').doc(documentId).set(inputs);
+            console.log('deleting..2');
+            await firestore().collection(uiDetails.dbTable).doc(documentId).set(inputs);
+            console.log('deleting..3');
         } catch (error) {
+            //console.log('deleting.. Error', error);
             Alert.alert("Error", "Event Update - Something went wrong.");
         } finally {
             navigation.navigate('Alerts', { filter: null });
         }
     };
-
-    const clearFormFields = () => {
-        console.log('clear event');
-        setInputs({
-            name: '',
-            description: '',
-            eventType: 'Meeting',
-            eventTypeId: 1,
-            deleted: false,
-            eventDate: '',
-            createdOn: new Date().toString(),
-            createdBy: 'Admin',
-            updatedOn: '',
-            updatedBy: '',
-        });
-        navigation.navigate('Alerts');
-    }
 
     const handleInputChange = (field: string, item: any) => {
         //console.log('field item:', field, item);
@@ -133,12 +136,23 @@ const AlertsNew = ({ navigation, route }) => {
         let fieldId = field + 'Id';
         setInputs(prevState => ({ ...prevState, [field]: changedItem.name }));
         setInputs(prevState => ({ ...prevState, [fieldId]: changedItem.id }));
-        if (field === 'taluka') {
-            let villagesByFilter = villages.filter(item => { return item.taluka == changedItem.name; });
-            //console.log('set village as per taluka', villagesByFilter);
-            setVillagesByTaluka(villagesByFilter);
-        }
     }
+
+    const handleDOBChange = ((event, dobSelected) => {
+        const dobDate = dobSelected || selectedDOB;
+        setInputs(prevState => ({ ...prevState, ["eventDate"]: dobDate }));
+        //console.log('innputs', inputs.eventDate);
+        setSelectedDOB(dobDate);
+        let dobInText = dobDate.getDate() + '-' + (dobDate.getMonth() + 1) + '-' + dobDate.getFullYear();
+        setSelectedDOBText(dobInText);
+    });
+
+    const handleDOBSet = ((dateSelected: any) => {
+        if (!dateSelected) return;
+        console.log('dobSelected', dateSelected);
+        let dateInText = dateSelected.toDate().getDate() + '-' + (dateSelected.toDate().getMonth() + 1) + '-' + dateSelected.toDate().getFullYear();
+        setSelectedDOBText(dateInText);
+    });
 
     const handleError = (field: string, errorMessage: string) => {
         setErrors(prevState => ({ ...prevState, [field]: errorMessage }))
@@ -171,17 +185,34 @@ const AlertsNew = ({ navigation, route }) => {
                         onChangeText={text => handleInputChange('description', text)}
                     />
                     <CustomTextInput
+                        label="Place"
+                        data={inputs.location}
+                        iconName="person"
+                        error={errors.location}
+                        placeholder="Enter location"
+                        onFocus={() => { handleError('location', null) }}
+                        onChangeText={text => handleInputChange('location', text)}
+                    />
+                    <CustomTextInput
                         label="Date"
-                        data={inputs.eventDate}
+                        data={selectedDOBText}
                         iconName="person"
                         error={errors.eventDate}
                         placeholder="Enter Event Date dd/mm/yy"
-                        keyboardType='numeric'
-                        onFocus={() => { handleError('eventDate', null) }}
-                        onChangeText={text => handleInputChange('eventDate', text)}
-                    />
+                        onFocus={() => { handleError('eventDate', null); setDatePickerToggle(true); }}
+                    //onChangeText={text => handleInputChange('eventDate', text)}
+                    />{datePickerToggle && <View><DateTimePicker
+                        value={selectedDOB}
+                        mode="date"
+                        display="default"
+                        onChange={(event, data) => {
+                            setDatePickerToggle(false);
+                            handleDOBChange(event, data);
+                        }}
+
+                    /></View>}
                     <CustomButton title="Save" onPress={() => validate()} />
-                    {documentId && <CustomButton title="Delete" onPress={() => deleteEvent()} />}
+                    {documentId && <CustomButton title="Delete" bgColor="lightgrey" color="black" onPress={() => deleteEvent()} />}
                 </View>
             </ScrollView>
         </View>

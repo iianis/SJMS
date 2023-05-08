@@ -52,3 +52,6 @@ git config --global --add safe.directory <path to repository>
 
 npm i --save react-native-element-dropdown
 npm install --save @react-native-community/netinfo
+npm i react-native-switch-selector --save
+
+npm install --save @react-native-async-storage/async-storage

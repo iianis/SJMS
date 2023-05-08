@@ -1,166 +1,153 @@
-import React, {useState} from 'react';
-import {
-  Button,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, Keyboard, Alert } from 'react-native'
+import React, { useContext, useEffect, useState } from 'react'
+import CustomTextInput from '../components/CustomTextInput'
+import CustomButton from '../components/CustomButton'
+import Loader from '../components/Loader'
+import firestore from '@react-native-firebase/firestore';
 
-const Register = ({navigation}) => {
-  const [data, setData] = useState({
-    mobile: '',
-    password: '',
-    confirmPassword: '',
-    checkIfInputChanged: false,
-    secureTextEntry: true,
-    secureTextEntryConfirm: true,
-  });
+const Register = ({ navigation, route }) => {
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState({});
+  const [inputs, setInputs] = useState({
+    phone: '', password: '', confirmPassword: ''
+  })
 
-  const textInputChange = (val: any) => {
-    if (val.length === 0) {
-      //array destructuring, ...data get current state and then updates new values
-      setData({
-        ...data,
-        mobile: val,
-        checkIfInputChanged: true,
-      });
-    } else {
-      setData({
-        ...data,
-        mobile: val,
-        checkIfInputChanged: false,
-      });
+  const validate = () => {
+    Keyboard.dismiss();
+    //console.log('validation..', inputs);
+    let valid = true;
+
+    if (!inputs.phone || inputs.phone.length != 10) {
+      handleError('phone', 'Please enter 10 digit phone number');
+      valid = false;
     }
+
+    if (!inputs.password || inputs.password.length < 4) {
+      handleError('password', 'Please enter valid password. Minimum length of 4');
+      valid = false;
+    }
+
+    if (!inputs.confirmPassword || (inputs.password != inputs.confirmPassword)) {
+      handleError('confirmPassword', 'Please enter a matching password');
+      valid = false;
+    }
+    //console.log("validating login token");
+    if (valid) save(); //register
+  }
+
+  const save = () => {
+    setLoading(true);
+    console.log('adding..');
+    setTimeout(async () => {
+      setLoading(false);
+      try {
+        //AsyncStorage.setItem('user', JSON.stringify(inputs));
+        await firestore()
+          .collection('members')
+          .add(inputs)
+          .then(res => {
+            Alert.alert("Success", "Registration was successful.");
+          });
+      } catch (error) {
+        Alert.alert("Error", "Member Registration - Something went wrong.");
+      } finally {
+        navigation.navigate('Loginv2');
+      }
+    }, 3000)
+  }
+
+  const loadMemberByPhone = async (phone: string, familyPhone: boolean = false) => {
+    setLoading(true);
+    await firestore()
+      .collection('members')
+      .where('phone', '==', phone)
+      .get()
+      .then(memberSnapshot => {
+        memberSnapshot.forEach(item => {
+          Alert.alert("Mobile already Registered!", "Please check the phone number.",
+            [
+              {
+                text: 'Ok', onPress: () => {
+                  console.log('Try different Phone Number');
+                }
+              },
+              { text: 'Cancel', onPress: () => console.log('Try different Phone Number') },
+            ],
+            {
+              cancelable: false
+            });
+        })
+        setLoading(false);
+      });
   };
+
+  const handleInputChange = (field: string, item: any) => {
+    setInputs(prevState => ({ ...prevState, [field]: item }));
+  };
+
+  const handleError = (field: string, errorMessage: string) => {
+    setErrors(prevState => ({ ...prevState, [field]: errorMessage }))
+  };
+
+  useEffect(() => {
+  }, []);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.textHeader}>Register Now!</Text>
+      <Loader visible={isLoading} />
+      <ImageBackground
+        source={require('../images/appbackground.jpeg')}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+      </ImageBackground>
+      <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center', top: 50 }}>
+        <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#009387' }}>SJMSS</Text>
       </View>
-      <View style={styles.footer}>
-        <Text style={styles.textFooter}>Mobile #</Text>
-        <View style={styles.action}>
-          <TextInput
-            placeholder="Enter your mobile number"
-            style={styles.textInput}
-            onChangeText={val => textInputChange(val)}
-          />
-          {data.checkIfInputChanged ? (
-            <Text style={styles.textInvalid}>Invalid Input</Text>
-          ) : null}
-        </View>
-        <Text style={styles.textFooter}>Password</Text>
-        <View style={styles.action}>
-          <TextInput
-            placeholder="Enter your password"
-            style={styles.textInput}
-            secureTextEntry={true}
-            autoCapitalize="none"
-          />
-        </View>
-        <Text style={styles.textFooter}>Confirm Password</Text>
-        <View style={styles.action}>
-          <TextInput
-            placeholder="Confirm your password"
-            style={styles.textInput}
-            secureTextEntry={true}
-            autoCapitalize="none"
-          />
-        </View>
-        <Button
-          title="REGISTER"
-          color="#009387"
-          onPress={() => navigation.goBack()}
+      <View style={styles.container2}>
+        <CustomTextInput
+          label="Phone number"
+          data={inputs.phone}
+          iconName="phone"
+          error={errors.phone}
+          placeholder="Enter phone number"
+          keyboardType='numeric'
+          onFocus={() => { handleError('phone', null) }}
+          onChangeText={text => handleInputChange('phone', text)}
         />
-        <TouchableOpacity
-          style={styles.buttonRegister}
-          onPress={() => navigation.goBack()}>
-          <Text> CANCEL </Text>
-        </TouchableOpacity>
+        <CustomTextInput
+          label="Password"
+          data={inputs.password}
+          iconName="lock"
+          password
+          error={errors.password}
+          placeholder="Enter Password"
+          onFocus={() => { handleError('password', null) }}
+          onChangeText={text => handleInputChange('password', text)}
+        />
+        <CustomTextInput
+          label="Confirm Password"
+          data={inputs.confirmPassword}
+          iconName="lock"
+          password
+          error={errors.confirmPassword}
+          placeholder="Confirm Password"
+          onFocus={() => { handleError('confirmPassword', null) }}
+          onChangeText={text => handleInputChange('confirmPassword', text)}
+        />
+        <CustomButton title="Register" onPress={() => validate()} />
+        <CustomButton title="Login" bgColor="lightgrey" color="black" onPress={() => navigation.navigate("Login")} />
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default Register;
+export default Register
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#009387',
-  },
-  header: {
-    flex: 1,
     justifyContent: 'flex-end',
-    paddingHorizontal: 20,
-    paddingBottom: 50,
   },
-  footer: {
-    flex: 3,
-    backgroundColor: '#fff',
-    borderTopRightRadius: 30,
-    borderTopLeftRadius: 30,
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-  },
-  logo: {
-    height: 200,
-    width: 200,
-    borderRadius: 50,
-    marginLeft: 80,
-    marginTop: 50,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    paddingBottom: 10,
-  },
-  text: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    paddingBottom: 10,
-  },
-  button: {
-    marginTop: 10,
-    alignItems: 'center',
-    borderColor: 'grey',
-    borderWidth: 1,
-    borderRadius: 5,
-    height: 35,
-    paddingTop: 5,
-  },
-  buttonRegister: {
-    marginTop: 10,
-    alignItems: 'center',
-    borderColor: 'grey',
-    borderWidth: 1,
-    borderRadius: 3,
-    height: 35,
-    paddingTop: 5,
-  },
-  textHeader: {color: '#fff', fontSize: 30, fontWeight: 'bold'},
-  textFooter: {fontSize: 16},
-  action: {
-    flexDirection: 'row',
-    marginTop: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f2',
-    paddingBottom: 5,
-  },
-  textInput: {flex: 1, marginTop: 0, paddingLeft: 10, color: '#05375a'},
-  signIn: {
-    width: '100%',
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  textSign: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  textInvalid: {color: 'red', fontSize: 12},
+  container2: {
+    marginHorizontal: 10,
+  }
 });

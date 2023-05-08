@@ -1,8 +1,11 @@
 import { Image, StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import InternetConnected from '../components/InternetConnected';
+import { AuthContext } from './AuthContext';
 
 const Intro = ({ navigation }: { navigation: any }) => {
+    const { logout } = useContext(AuthContext);
     useEffect(() => {
         //setFilteredTalukas(talukas);
     }, []);
@@ -10,10 +13,14 @@ const Intro = ({ navigation }: { navigation: any }) => {
     const cardSelected = (cardName: string) => {
         switch (cardName) {
             case "feesdonations": navigation.navigate("Donations"); break;
-            case "alerts": navigation.navigate("Alerts"); break;
+            case "events": navigation.navigate("Alerts"); break;
             case "schemes": navigation.navigate("Schemes"); break;
             case "requests": navigation.navigate("Requests"); break;
             case "members": navigation.navigate("Members", { filter: "Member" }); break;
+            case "profile": navigation.navigate("Profile", { item: null }); break;
+            case "matrimonial": navigation.navigate("WorkInProgress", { item: { title: 'Matrimonial' } }); break;
+            case "jobs": navigation.navigate("WorkInProgress", { item: { title: 'Jobs' } }); break;
+
         }
     };
 
@@ -31,12 +38,8 @@ const Intro = ({ navigation }: { navigation: any }) => {
                 </View>
                 <View style={styles.sectionMain}>
                     <Text style={styles.sectionText}>
-                        This organization was formed on 22nd March 1996 to help our
-                        community to get benefits from different Government Schemes and
-                        spread message of how important education is to our society.
+                        This organization was formed on 22nd March 1996 to help our community to get benefits from different Government Schemes and spread message of how important education is to our society.
                     </Text>
-                </View>
-                <View style={styles.sectionMain}>
                     <Text style={styles.sectionText}>
                         Our main focus is on Education, HealthCare, and Other needs of our
                         community. We try to reachout to our members who are blessed and doing
@@ -72,8 +75,8 @@ const Intro = ({ navigation }: { navigation: any }) => {
                         <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>Contribute and be a part of the change.</Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => { cardSelected("alerts"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
-                    <Text style={[styles.title, { color: 'white' }]}>Alerts & Notifications</Text>
+                <TouchableOpacity onPress={() => { cardSelected("events"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Events & Notifications</Text>
                     <Image source={require('../images/alerts.png')} style={{ height: 200, width: '100%' }} />
                     <View style={styles.cardRow2}>
                         <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Alerts and Notifications for Meetings, Activities, & unforseen Events.</Text>
@@ -104,6 +107,23 @@ const Intro = ({ navigation }: { navigation: any }) => {
                         </Text>
                     </View>
                 </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("matrimonial"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Matrimonial</Text>
+                    <Image source={require('../images/matrimonial.jpg')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Let us take our community bonds to the next level.</Text>
+                    </View>
+                </TouchableOpacity>
+                <View style={{ margin: 10, flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <TouchableOpacity
+                        onPress={() => { cardSelected("profile"); }}>
+                        <Icon name="person" size={30} color="green" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => { logout(); }}>
+                        <Icon name="logout" size={30} color="orange" />
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
             <InternetConnected />
         </View >
@@ -125,7 +145,8 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 5,
+        marginBottom: 5,
         backgroundColor: 'white',
         borderRadius: 20,
     },
@@ -133,7 +154,8 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginVertical: 10,
+        marginTop: 5,
+        marginBottom: 5,
         marginHorizontal: 5,
         backgroundColor: '#009387',
         borderRadius: 5,
@@ -145,8 +167,7 @@ const styles = StyleSheet.create({
     },
     sectionText: {
         fontSize: 20,
-        paddingHorizontal: 30,
-        marginBottom: 10,
+        marginHorizontal: 5,
         textAlign: 'justify',
     },
     cardContainer: {
@@ -165,8 +186,8 @@ const styles = StyleSheet.create({
     },
     item: {
         padding: 10,
-        marginVertical: 10,
-        marginHorizontal: 10,
+        marginVertical: 5,
+        marginHorizontal: 5,
         borderRadius: 10,
     },
     title: {

@@ -8,21 +8,22 @@ import Loader from '../components/Loader'
 import CustomDropdownList from '../components/CustomDropdownList'
 import { talukas, villages } from '../data/geography'
 import firestore from '@react-native-firebase/firestore';
-import { educations, memberPublicTypes, memberTypes, relations, works } from '../data/members';
+import { educations, IMember, memberPublicTypes, memberType, relations, works } from '../data/members';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const MemberNew = ({ navigation, route }) => {
     const item = route.params?.item;
     const [documentId, setDocumentId] = useState('');
     const [villagesByTaluka, setVillagesByTaluka] = useState([]);
-    const [inputs, setInputs] = useState({
+    const [inputs, setInputs] = useState<IMember>({
         phone: '',
         name: '',
         taluka: '',
-        village: '',
         talukaId: 0,
         villageId: 0,
+        village: '',
         district: 'Satara',
+        districtId: 1,
         address: '',
         pin: '',
         dob: '',
@@ -35,12 +36,14 @@ const MemberNew = ({ navigation, route }) => {
         relation: 'Self',
         relationId: 1,
         familyMembers: 1,
-        fees: [],
-        requests: [],
-        invitations: [],
+        familyHeadPhone: '',
+        familyHeadName: '',
+        //fees: [],
+        //requests: [],
+        //invitations: [],
         certificateIssued: false,
-        donations: [],
-        active: true,
+        //donations: [],
+        deleted: false,
     });
     //console.log("onrefresh: ", inputs);
     const [errors, setErrors] = useState({});
@@ -119,12 +122,20 @@ const MemberNew = ({ navigation, route }) => {
         } else setLoading(false);
     }, []);
 
-    const loadMemberDetails = (data, memberId) => {
-        setInputs(data);
-        handleDOBSet(data.dob.toDate());
-        setSelectedDOB(data.dob.toDate());
+    const loadMemberDetails = (data, memberId, isFamilyPhone = false) => {
+        if (!isFamilyPhone) {
+            setInputs(data);
+            handleDOBSet(data.dob.toDate());
+            setSelectedDOB(data.dob.toDate());
+            setDocumentId(memberId);
+        } else {
+            setInputs(prevState => ({ ...prevState, ['taluka']: data.taluka }));
+            setInputs(prevState => ({ ...prevState, ['talukaId']: data.talukaId }));
+            setInputs(prevState => ({ ...prevState, ['village']: data.village }));
+            setInputs(prevState => ({ ...prevState, ['villageId']: data.villageId }));
+            setInputs(prevState => ({ ...prevState, ['familyHeadName']: data.name }));
+        }
         handleDDLChange("taluka", { id: data.talukaId, name: data.taluka });
-        setDocumentId(memberId);
     };
 
     const loadMember = async () => {
@@ -160,7 +171,7 @@ const MemberNew = ({ navigation, route }) => {
                                 text: 'Ok', onPress: () => {
                                     console.log('Go ahead and load this Member Information');
                                     let data = item.data();
-                                    if (!familyPhone) loadMemberDetails(data, item.id);
+                                    loadMemberDetails(data, item.id, familyPhone);
                                 }
                             },
                             { text: 'Cancel', onPress: () => console.log('Cancel and try different Phone Number') },
@@ -176,8 +187,8 @@ const MemberNew = ({ navigation, route }) => {
     const handleInputChange = (field: string, item: any) => {
         setInputs(prevState => ({ ...prevState, [field]: item }));
 
-        if ((field === 'phone' || field == 'familyPhone') && item.toString().length == 10) {
-            loadMemberByPhone(item, field == 'familyPhone'); //name == 'Student' ? name : 'Business'
+        if ((field === 'phone' || field == 'familyHeadPhone') && item.toString().length == 10) {
+            loadMemberByPhone(item, field == 'familyHeadPhone'); //name == 'Student' ? name : 'Business'
         }
     }
 
@@ -221,6 +232,7 @@ const MemberNew = ({ navigation, route }) => {
             talukaId: 0,
             villageId: 0,
             district: 'Satara',
+            districtId: 1,
             address: '',
             pin: '',
             dob: '',
@@ -233,12 +245,10 @@ const MemberNew = ({ navigation, route }) => {
             relation: (member.name == 'Family' ? 'Other' : 'Self'),
             relationId: (member.name == 'Family' ? 99 : 1),
             familyMembers: 1,
-            fees: [],
-            requests: [],
-            invitations: [],
+            familyHeadName: '',
+            familyHeadPhone: '',
             certificateIssued: false,
-            donations: [],
-            active: true,
+            deleted: false,
         });
         setSelectedDOBText('');
     };
@@ -266,13 +276,13 @@ const MemberNew = ({ navigation, route }) => {
                     {inputs.memberType == 'Family' && <View>
                         <CustomTextInput
                             label="Family Phone"
-                            data={inputs.familyPhone}
+                            data={inputs.familyHeadPhone}
                             iconName="phone"
-                            error={errors.familyPhone}
+                            error={errors.familyHeadPhone}
                             placeholder="Enter family phone"
                             keyboardType='numeric'
-                            onFocus={() => { handleError('familyPhone', null) }}
-                            onChangeText={text => handleInputChange('familyPhone', text)}
+                            onFocus={() => { handleError('familyHeadPhone', null) }}
+                            onChangeText={text => handleInputChange('familyHeadPhone', text)}
                         />
                         <CustomDropdownList
                             data={relations}

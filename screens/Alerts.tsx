@@ -9,22 +9,26 @@ import CustomFlatList from '../components/CustomFlatList';
 
 const Alerts = ({ navigation }) => {
   const [selectedId, setSelectedId] = useState(null);
-  const [eventsData, setEventsData] = useState([]);
+  const [itemsData, setItemsData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uiDetails, setUIDetails] = useState({
+    dbTable: "events", redirectComponent: 'AlertsNew'
+  });
 
   useEffect(() => {
     navigation.addListener('focus', async () => {
-      getEvents();
+      getItems();
     });
   }, []);
 
-  const getEvents = async () => {
+  const getItems = async () => {
     setLoading(true);
-    setEventsData([]);
+    setItemsData([]);
 
     await firestore()
-      .collection('events')
-      .orderBy('name')
+      .collection(uiDetails.dbTable)
+      .where('deleted', '==', false)
+      .orderBy('eventDate', 'desc')
       .limit(50)
       .get()
       .then(eventSnapshot => {
@@ -32,7 +36,7 @@ const Alerts = ({ navigation }) => {
           if (doc?.exists) {
             let itemDoc = doc.data();
             itemDoc.id = doc.id;
-            setEventsData(events => [...events, itemDoc]);
+            setItemsData(events => [...events, itemDoc]);
 
           } else {
             console.log("Error getEvents: Invalid Document");
@@ -42,32 +46,8 @@ const Alerts = ({ navigation }) => {
       });
   };
 
-  const Item = ({ item, onPress, backgroundColor, textColor }) => (
-    <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
-      <Text style={[styles.title, textColor]}>{item.eventType}</Text>
-      <View style={styles.cardRow2}>
-        <Text style={[styles.title2, textColor]}>Description: {item.desc}</Text>
-      </View>
-      <View style={styles.cardRow3}>
-        <Text style={[styles.title2, textColor]}>Date: {item.eventDate}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderItem = ({ item }) => {
-    const backgroundColor = item.id === selectedId ? '#F9D162' : '#F4944F';
-    const color = item.id === selectedId ? 'white' : 'black';
-
-    return (
-      <Item
-        item={item}
-        onPress={() => {
-          setSelectedId(item.id);
-        }}
-        backgroundColor={{ backgroundColor }}
-        textColor={{ color }}
-      />
-    );
+  const handleListSelection = (item) => {
+    navigation.navigate(uiDetails.redirectComponent, { item: item });
   };
 
   return (
@@ -76,16 +56,12 @@ const Alerts = ({ navigation }) => {
       <View>
         <Search item={{ placeHolder: 'Search by any detail' }} />
       </View>
-      <CustomButton title="Add New" onPress={() => navigation.navigate('AlertsNew', { item: null })} />
-      <CustomFlatList data={eventsData} selectedId={selectedId} onSelect={(item) => { handleListSelection(item); }} />
+      <CustomButton title="Add New" onPress={() => navigation.navigate(uiDetails.redirectComponent, { item: null })} />
+      <CustomFlatList data={itemsData} selectedId={selectedId} onSelect={(item) => { handleListSelection(item); }} />
     </View>
   );
 };
 
-const handleListSelection = (item) => {
-  //console.log("list item selected ", item);
-  navigation.navigate('AlertsNew', { item: item });
-};
 export default Alerts;
 
 const styles = StyleSheet.create({
@@ -139,4 +115,5 @@ const styles = StyleSheet.create({
     color: 'lightgrey',
   },
 });
+
 

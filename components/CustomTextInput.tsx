@@ -1,12 +1,10 @@
 import { View, Text, TextInput, StyleSheet } from 'react-native'
 import React, { useState } from 'react'
 import Colors from '../data/colorscheme';
-//import EvilIcon from 'react-native-vector-icons/EvilIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-//import IconCommunity from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const CustomTextInput = ({ label, data, iconName, error, password, onFocus = () => { }, ...props }) => {
+const CustomTextInput = ({ label, data, iconName, error, password, minLength = 8, maxLength = 50, onFocus = () => { }, ...props }) => {
 
     const [isFocused, setIsFocused] = useState(false);
     const [hidePassword, setHidePassword] = useState(password);
@@ -24,6 +22,9 @@ const CustomTextInput = ({ label, data, iconName, error, password, onFocus = () 
                     value={data}
                     secureTextEntry={hidePassword}
                     autoCorrect={false}
+                    maxLength={maxLength ? maxLength : 50}
+                    //multiline={true}
+                    //numberOfLines={5}
                     onFocus={() => {
                         onFocus();
                         setIsFocused(true);
