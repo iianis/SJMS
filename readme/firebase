@@ -10,3 +10,5 @@ service cloud.firestore {
 npm i --save @react-native-firebase/app
 npm i --save @react-native-firebase/auth
 npm i --save @react-native-firebase/firestore
+
+npm i --save @react-native-firebase/messaging

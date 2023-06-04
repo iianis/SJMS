@@ -61,17 +61,17 @@ const MemberDetails = ({ route, navigation }) => {
   };
 
   const updateMember = async () => {
-    console.log('updating..');
+    //console.log('updating..');
     await firestore().collection('members').doc(documentId).set(memberData);
   };
 
   const addMember = async () => {
-    console.log('adding..');
+    //console.log('adding..');
     await firestore()
       .collection('members')
       .add(memberData)
       .then(res => {
-        console.log(res);
+        //console.log(res);
       });
     navigation.navigate('Members');
   };

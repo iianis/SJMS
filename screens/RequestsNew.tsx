@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Keyboard, Alert } from 'react-native';
-import { IRequest, requestTypes } from '../data/misc';
+import { dBTable, IRequest, requestTypes } from '../data/misc';
 import firestore from '@react-native-firebase/firestore';
 import CustomDropdownList from '../components/CustomDropdownList';
 import CustomTextInput from '../components/CustomTextInput';
@@ -10,15 +10,19 @@ import Colors from '../data/colorscheme';
 import { talukas, villages } from '../data/geography';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import SwitchSelector from "react-native-switch-selector";
+import CustomButtonSwitch from '../components/CustomButtonSwitch';
 
 const RequestsNew = ({ navigation, route }) => {
     //const [selectedId, setSelectedId] = useState(1);
     const item = route.params?.item;
+    const loggedInUser = route.params.user;
     const [documentId, setDocumentId] = useState('');
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
-    const [selectedDOB, setSelectedDOB] = useState(new Date());
-    const [selectedDOBText, setSelectedDOBText] = useState("");
+    const [datePickerToggle, setDatePickerToggle] = useState(false);
+    const [dateTimePickerMode, setDateTimePickerMode] = useState("date");
+    const [selectedApprovedDate, setSelectedApprovedDate] = useState(new Date());
+    const [selectedApprovedDateText, setSelectedApprovedDateText] = useState("");
     const [villagesByTaluka, setVillagesByTaluka] = useState([]);
     const [uiDetails, setUIDetails] = useState({
         dbTable: "requests", redirectComponent: 'Requests'
@@ -36,7 +40,7 @@ const RequestsNew = ({ navigation, route }) => {
         villageId: 0,
         district: 'Satara',
         deleted: false,
-        approvedOn: '',
+        approvedDate: '',
         approved: false,
         paid: false,
         createdOn: new Date().toString(),
@@ -49,7 +53,9 @@ const RequestsNew = ({ navigation, route }) => {
 
     useEffect(() => {
         if (item) {
+            //console.log('item loading.. approved', item.approved, item.approvedDate);
             setInputs(item);
+            handleApprovedDate(item.approvedDate);
             handleDDLChange("taluka", { id: item.talukaId, name: item.taluka });
             setDocumentId(item.id);
         } else {
@@ -59,7 +65,7 @@ const RequestsNew = ({ navigation, route }) => {
 
     const validate = () => {
         Keyboard.dismiss();
-        console.log('validation..', inputs);
+        //console.log('validation..', inputs.approved);
         let valid = true;
 
         if (!inputs.description) {
@@ -93,7 +99,7 @@ const RequestsNew = ({ navigation, route }) => {
             setLoading(false);
             try {
                 await firestore()
-                    .collection(uiDetails.dbTable)
+                    .collection(dBTable(uiDetails.dbTable))
                     .add(inputs)
                     .then(res => {
                         //console.log(res);
@@ -102,7 +108,7 @@ const RequestsNew = ({ navigation, route }) => {
                 Alert.alert("Error", "Request Save - Something went wrong.");
                 console.log(error);
             } finally {
-                navigation.navigate(uiDetails.redirectComponent, { filter: null });
+                navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
             }
         }, 3000)
     };
@@ -112,11 +118,11 @@ const RequestsNew = ({ navigation, route }) => {
         try {
             inputs.updatedBy = '';
             inputs.updatedOn = new Date().toString();
-            await firestore().collection(uiDetails.dbTable).doc(documentId).set(inputs);
+            await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
         } catch (error) {
             Alert.alert("Error", "Request Update - Something went wrong.");
         } finally {
-            navigation.navigate(uiDetails.redirectComponent, { filter: null });
+            navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
         }
 
     };
@@ -125,11 +131,11 @@ const RequestsNew = ({ navigation, route }) => {
         setLoading(true);
         try {
             inputs.deleted = true;
-            await firestore().collection(uiDetails.dbTable).doc(documentId).set(inputs);
+            await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
         } catch (error) {
             Alert.alert("Error", "Request Update - Something went wrong.");
         } finally {
-            navigation.navigate(uiDetails.redirectComponent, { filter: null });
+            navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
         }
     };
 
@@ -139,8 +145,8 @@ const RequestsNew = ({ navigation, route }) => {
         setInputs(prevState => ({ ...prevState, ['village']: data.village }));
         setInputs(prevState => ({ ...prevState, ['villageId']: data.villageId }));
         setInputs(prevState => ({ ...prevState, ['name']: data.name }));
-        handleDOBSet(data.createdOn?.toDate());
-        setSelectedDOB(data.createdOn?.toDate());
+        //handleDOBSet(data.createdOn?.toDate());
+        //setSelectedDOB(data.createdOn?.toDate());
         handleDDLChange("taluka", { id: data.talukaId, name: data.taluka });
     };
 
@@ -148,7 +154,7 @@ const RequestsNew = ({ navigation, route }) => {
         setLoading(true);
         console.log('getMember > by phone: ', phone);
         await firestore()
-            .collection('members')
+            .collection(dBTable('members'))
             .where('phone', '==', phone)
             .get()
             .then(memberSnapshot => {
@@ -190,26 +196,37 @@ const RequestsNew = ({ navigation, route }) => {
             setVillagesByTaluka(villagesByFilter);
         }
     }
-    const handleDOBChange = ((event, dobSelected) => {
-        const dobDate = dobSelected || selectedDOB;
-        setInputs(prevState => ({ ...prevState, ["dob"]: dobDate }));
-        setSelectedDOB(dobDate);
-        let dobInText = dobDate.getDate() + '-' + (dobDate.getMonth() + 1) + '-' + dobDate.getFullYear();
-        setSelectedDOBText(dobInText);
+
+    const handleApprovalChange = (value: number) => {
+        //console.log("approval status changed", value);
+        setInputs(prevState => ({ ...prevState, ['approved']: value == 1 ? true : false }));
+    };
+
+    const handleApprovedDateChange = ((event, dateSelected) => {
+        //console.log('inputs date 1 dateSelected', dateSelected);
+        //console.log('inputs date 11 selectedApprovedDate', selectedApprovedDate);
+        const approvedDate = dateSelected || selectedApprovedDate;
+        setInputs(prevState => ({ ...prevState, ["approvedDate"]: approvedDate }));
+        //console.log('inputs date 2', inputs.approvedDate, approvedDate);
+        setSelectedApprovedDate(approvedDate);
+        let approvedDateText = approvedDate.getDate() + '-' + (approvedDate.getMonth() + 1) + '-' + approvedDate.getFullYear();
+        //console.log('inputs date 21 approvedDateText', approvedDateText);
+        setSelectedApprovedDateText(approvedDateText);
     });
 
-    const handleDOBSet = ((dobSelected: string) => {
-        if (!dobSelected) return;
-        let dobInText = dobSelected.getDate() + '-' + (dobSelected.getMonth() + 1) + '-' + dobSelected.getFullYear();
-        setSelectedDOBText(dobInText);
+    const handleApprovedDate = ((dateSelected: any) => {
+        //console.log('handleApprovedDate 1', dateSelected);
+        if (!dateSelected) return;
+        let dateSelected2 = dateSelected.toString();
+        //console.log('handleApprovedDate 2', dateSelected);
+        let approvedDateText = new Date(dateSelected2).getDate() + '-' + (new Date(dateSelected2).getMonth() + 1) + '-' + new Date(dateSelected2).getFullYear();
+        setSelectedApprovedDateText(approvedDateText);
     });
+
     const handleError = (field: string, errorMessage: string) => {
         setErrors(prevState => ({ ...prevState, [field]: errorMessage }))
     }
-    const switchOptions = [
-        { label: "In progress", value: "1" },
-        { label: "Approved", value: "2" },
-    ];
+
     return (
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
@@ -283,28 +300,40 @@ const RequestsNew = ({ navigation, route }) => {
                             handleDDLChange('village', item)
                         }}
                     />
+                    {documentId && loggedInUser.accessLevel > 2 &&
+                        <CustomButtonSwitch
+                            label="Aproval Status"
+                            data={inputs.approved == true ? 1 : 0}
+                            iconName="approval"
+                            error={errors.approved}
+                            onChange={(value: boolean) => { handleApprovalChange(value) }}
+
+                        />
+                    }
                     {documentId && inputs.approved == true &&
                         <CustomTextInput
                             label="Approved Date"
-                            data={inputs.approvedOn}
-                            iconName="person"
-                            error={errors.approvedOn}
-                            placeholder="Enter approved On"
-                            onFocus={() => { handleError('approvedOn', null) }}
-                            onChangeText={text => handleInputChange('approvedOn', text)}
+                            data={selectedApprovedDateText}
+                            iconName="calendar-today"
+                            error={errors.approvedDate}
+                            placeholder="Enter approved date"
+                            isEditable={loggedInUser.accessLevel > 2 ? true : false}
+                            onFocus={() => { handleError('approvedDate', null); setDatePickerToggle(true); }}
+                        //onChangeText={text => handleInputChange('approvedDate', text)}
                         />}
+                    {datePickerToggle && <View><DateTimePicker
+                        value={selectedApprovedDate}
+                        mode={dateTimePickerMode}
+                        display="default"
+                        onChange={(event, data) => {
+                            setDatePickerToggle(false);
+                            handleApprovedDateChange(event, data);
+                        }}
 
-                    {documentId &&
-                        <SwitchSelector
-                            options={switchOptions}
-                            initial={0}
-                            selectedColor={Colors.white}
-                            buttonColor={Colors.lightgreen}
-                            onPress={value => console.log(`Call onPress with value: ${value}`)}
-                        />}
+                    /></View>}
 
-                    <CustomButton title="Save" onPress={() => validate()} />
-                    {documentId && <CustomButton title="Delete" bgColor="lightgrey" color="black" onPress={() => deleteRequest()} />}
+                    {loggedInUser.accessLevel > 1 && <CustomButton title="Save" onPress={() => validate()} />}
+                    {documentId && loggedInUser.accessLevel > 2 && <CustomButton title="Delete" bgColor="lightgrey" color="black" onPress={() => deleteRequest()} />}
                 </View>
             </ScrollView>
         </View>

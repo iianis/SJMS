@@ -1,16 +1,45 @@
-import { StyleSheet, Text, View, ImageBackground, Keyboard, Alert } from 'react-native'
+import { StyleSheet, Text, View, ImageBackground, Keyboard, Alert, Image } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import CustomTextInput from '../components/CustomTextInput'
 import CustomButton from '../components/CustomButton'
 import Loader from '../components/Loader'
 import firestore from '@react-native-firebase/firestore';
+import { dBTable } from '../data/misc'
 
 const Register = ({ navigation, route }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [inputs, setInputs] = useState({
-    phone: '', password: '', confirmPassword: ''
-  })
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
+    taluka: 'Satara',
+    talukaId: 1,
+    village: 'Satara',
+    villageId: 1,
+    district: 'Satara',
+    districtId: 1,
+    address: '',
+    pin: '',
+    dob: '',
+    work: 'Other',
+    workId: 99,
+    education: 'Other',
+    educationId: 99,
+    memberType: 'Member',
+    memberTypeId: 8,
+    relation: 'Self',
+    relationId: 1,
+    familyMembers: 1,
+    familyHeadPhone: '',
+    familyHeadName: '',
+    certificateIssued: false,
+    deleted: false,
+  });
+  const [uiDetails, setUIDetails] = useState({
+    dbTable: "members", redirectComponent: 'Members'
+  });
 
   const validate = () => {
     Keyboard.dismiss();
@@ -23,12 +52,16 @@ const Register = ({ navigation, route }) => {
     }
 
     if (!inputs.password || inputs.password.length < 4) {
-      handleError('password', 'Please enter valid password. Minimum length of 4');
+      handleError('password', 'Please enter valid password. Minimum length 4');
       valid = false;
     }
 
     if (!inputs.confirmPassword || (inputs.password != inputs.confirmPassword)) {
       handleError('confirmPassword', 'Please enter a matching password');
+      valid = false;
+    }
+    if (!inputs.name) {
+      handleError('name', 'Please enter Name');
       valid = false;
     }
     //console.log("validating login token");
@@ -37,13 +70,13 @@ const Register = ({ navigation, route }) => {
 
   const save = () => {
     setLoading(true);
-    console.log('adding..');
+    //console.log('adding..');
     setTimeout(async () => {
       setLoading(false);
       try {
         //AsyncStorage.setItem('user', JSON.stringify(inputs));
         await firestore()
-          .collection('members')
+          .collection(dBTable(uiDetails.dbTable))
           .add(inputs)
           .then(res => {
             Alert.alert("Success", "Registration was successful.");
@@ -51,27 +84,26 @@ const Register = ({ navigation, route }) => {
       } catch (error) {
         Alert.alert("Error", "Member Registration - Something went wrong.");
       } finally {
-        navigation.navigate('Loginv2');
+        navigation.navigate('Login');
       }
     }, 3000)
   }
 
-  const loadMemberByPhone = async (phone: string, familyPhone: boolean = false) => {
+  const loadMemberByPhone = async (phone: string) => {
     setLoading(true);
     await firestore()
-      .collection('members')
+      .collection(dBTable(uiDetails.dbTable))
       .where('phone', '==', phone)
       .get()
       .then(memberSnapshot => {
         memberSnapshot.forEach(item => {
-          Alert.alert("Mobile already Registered!", "Please check the phone number.",
+          Alert.alert("Mobile number - " + phone + " is already Registered!", "Please check and use different number.",
             [
               {
                 text: 'Ok', onPress: () => {
                   console.log('Try different Phone Number');
                 }
-              },
-              { text: 'Cancel', onPress: () => console.log('Try different Phone Number') },
+              }
             ],
             {
               cancelable: false
@@ -83,6 +115,10 @@ const Register = ({ navigation, route }) => {
 
   const handleInputChange = (field: string, item: any) => {
     setInputs(prevState => ({ ...prevState, [field]: item }));
+
+    if (field === 'phone' && item.toString().length == 10) {
+      loadMemberByPhone(item);
+    }
   };
 
   const handleError = (field: string, errorMessage: string) => {
@@ -94,13 +130,12 @@ const Register = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Loader visible={isLoading} />
-      <ImageBackground
-        source={require('../images/appbackground.jpeg')}
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
-      </ImageBackground>
-      <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center', top: 50 }}>
-        <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#009387' }}>SJMSS</Text>
+      <Loader visible={loading} />
+      <View style={styles.sectionMain}>
+        <Image
+          source={require('../images/logo.jpg')}
+          style={styles.logoImage}
+        />
       </View>
       <View style={styles.container2}>
         <CustomTextInput
@@ -112,6 +147,15 @@ const Register = ({ navigation, route }) => {
           keyboardType='numeric'
           onFocus={() => { handleError('phone', null) }}
           onChangeText={text => handleInputChange('phone', text)}
+        />
+        <CustomTextInput
+          label="Name"
+          data={inputs.name}
+          iconName="person"
+          error={errors.name}
+          placeholder="Enter name"
+          onFocus={() => { handleError('name', null) }}
+          onChangeText={text => handleInputChange('name', text)}
         />
         <CustomTextInput
           label="Password"
@@ -134,7 +178,7 @@ const Register = ({ navigation, route }) => {
           onChangeText={text => handleInputChange('confirmPassword', text)}
         />
         <CustomButton title="Register" onPress={() => validate()} />
-        <CustomButton title="Login" bgColor="lightgrey" color="black" onPress={() => navigation.navigate("Login")} />
+        <CustomButton title="Cancel" bgColor="lightgrey" color="black" onPress={() => navigation.navigate("Login")} />
       </View>
     </View>
   )
@@ -149,5 +193,14 @@ const styles = StyleSheet.create({
   },
   container2: {
     marginHorizontal: 10,
-  }
+  },
+  sectionMain: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 5,
+    marginBottom: 5,
+    backgroundColor: 'white',
+  },
+  logoImage: { width: 160, height: 160, borderRadius: 120, marginVertical: 20 },
 });

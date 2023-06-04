@@ -17,6 +17,7 @@ import Schemes from './Schemes';
 import WorkInProgress from './WorkInProgress';
 import Members from './Members';
 import Profile from './Profile';
+import SchemesNew from './SchemesNew';
 
 const AppStack = () => {
 
@@ -73,7 +74,7 @@ const AppStack = () => {
                 name="WorkInProgress"
                 component={WorkInProgress}
                 options={{
-                    headerShown: true,
+                    headerShown: false,
                     title: 'Work In Progress',
                     headerBackTitleVisible: true,
                 }}
@@ -83,6 +84,15 @@ const AppStack = () => {
                 component={Schemes}
                 options={{
                     headerShown: true,
+                    title: 'Scholarships & Schemes',
+                    headerBackTitleVisible: true,
+                }}
+            />
+            <Stack.Screen
+                name="SchemesNew"
+                component={SchemesNew}
+                options={{
+                    headerShown: false,
                     title: 'Scholarships & Schemes',
                     headerBackTitleVisible: true,
                 }}
@@ -154,7 +164,7 @@ const AppStack = () => {
                 name="Matrimonial"
                 component={Matrimonial}
                 options={{
-                    headerShown: true,
+                    headerShown: false,
                     title: 'Matrimonial',
                     headerBackTitleVisible: true,
                 }}

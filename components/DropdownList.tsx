@@ -547,7 +547,7 @@ const DropdownComponent = ({ heading, onChange }) => {
   const [selectedVillage, setSelectedVillage] = useState(null);
 
   useEffect(() => {
-    console.log('inside usereffect ..');
+    //console.log('inside usereffect ..');
   }, []);
 
   const onDistrictChange = value => {
@@ -556,7 +556,7 @@ const DropdownComponent = ({ heading, onChange }) => {
     setFilteredTalukas([]);
     setFilteredVillages([]);
 
-    console.log('District: ' + value);
+    //console.log('District: ' + value);
     //console.log('Talukas to filter from: ' + talukas.length);
     //setSelectedDistrictId(value);
 
@@ -567,9 +567,9 @@ const DropdownComponent = ({ heading, onChange }) => {
 
     if (filterTalukas.length > 0) {
       setFilteredTalukas(filterTalukas);
-      console.log('Talukas: ' + filterTalukas.length);
+      //console.log('Talukas: ' + filterTalukas.length);
       setSelectedTalukaId(filterTalukas[0].label);
-      console.log('Taluka selected: ' + filterTalukas[0].label);
+      //console.log('Taluka selected: ' + filterTalukas[0].label);
       filterVillages = villages.filter(village => {
         return village.taluka === filterTalukas[0].label;
       });
@@ -577,10 +577,10 @@ const DropdownComponent = ({ heading, onChange }) => {
 
     if (filterVillages.length > 0) {
       setFilteredVillages(filterVillages);
-      console.log('Villages: ' + filterVillages.length);
+      //console.log('Villages: ' + filterVillages.length);
       setSelectedVillageId(filterVillages[0].label);
       setSelectedVillage(filterVillages[0]);
-      console.log('Village selected: ' + filterVillages[0].label);
+      //console.log('Village selected: ' + filterVillages[0].label);
     }
   };
 
@@ -588,7 +588,7 @@ const DropdownComponent = ({ heading, onChange }) => {
     let filterVillages = [];
     setFilteredVillages([]);
 
-    console.log('Taluka changed to: ' + value);
+    //console.log('Taluka changed to: ' + value);
 
     setSelectedTalukaId(value);
     filterVillages = villages.filter(village => {
@@ -597,10 +597,10 @@ const DropdownComponent = ({ heading, onChange }) => {
 
     if (filterVillages.length > 0) {
       setFilteredVillages(filterVillages);
-      console.log('Villages: ' + filterVillages.length);
+      //console.log('Villages: ' + filterVillages.length);
       setSelectedVillageId(filterVillages[0].label);
       setSelectedVillage(filterVillages[0]);
-      console.log('Village selected: ' + filterVillages[0].label);
+      //console.log('Village selected: ' + filterVillages[0].label);
     }
   };
 
@@ -609,7 +609,7 @@ const DropdownComponent = ({ heading, onChange }) => {
       return village.label === value;
     });
     setSelectedVillage(selection[0]);
-    console.log('Village changed to: ' + value);
+    //console.log('Village changed to: ' + value);
   };
 
   return (

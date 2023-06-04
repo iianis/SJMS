@@ -6,9 +6,12 @@ import Search from '../components/Search';
 
 import firestore from '@react-native-firebase/firestore';
 import CustomFlatList from '../components/CustomFlatList';
+import { dBTable } from '../data/misc';
 
-const Requests = ({ navigation }) => {
+const Requests = ({ navigation, route }) => {
+    const loggedInUser = route.params.user;
     const [selectedId, setSelectedId] = useState(null);
+    const [searchResult, setSearchResult] = useState([]);
     const [itemsData, setItemsData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [uiDetails, setUIDetails] = useState({
@@ -16,19 +19,22 @@ const Requests = ({ navigation }) => {
     });
 
     useEffect(() => {
-        navigation.addListener('focus', async () => {
-            console.log('loading...0');
+        const unsubscribe = navigation.addListener('focus', async () => {
+            //console.log('loading...0');
+            setItemsData([]);
+            setSearchResult([]);
             getItems();
         });
-    }, []);
+        return unsubscribe;
+    }, [navigation]);
 
     const getItems = async () => {
-        console.log('loading...');
+        //console.log('loading...');
         setLoading(true);
         setItemsData([]);
 
         await firestore()
-            .collection(uiDetails.dbTable)
+            .collection(dBTable(uiDetails.dbTable))
             .where('deleted', '==', false)
             .orderBy('createdOn', 'desc')
             .limit(50)
@@ -37,10 +43,16 @@ const Requests = ({ navigation }) => {
                 itemsSnapshot.forEach(doc => {
                     console.log('loading...2');
                     if (doc?.exists) {
-                        console.log('loading...3');
+                        //console.log('loading...3');
                         let itemDoc = doc.data();
                         itemDoc.id = doc.id;
+                        //console.log('loading...31', itemDoc.approvedDate);
+                        if (itemDoc.approvedDate)
+                            itemDoc.approvedDate = itemDoc.approvedDate.toDate().toString();
+                        //console.log('loading...32', itemDoc.approvedDate);
                         setItemsData(items => [...items, itemDoc]);
+                        setSearchResult(items => [...items, itemDoc]);
+                        //console.log('loading...32');
 
                     } else {
                         console.log("Error getRequests: Invalid Document");
@@ -51,18 +63,33 @@ const Requests = ({ navigation }) => {
     };
 
     const handleListSelection = (item: any) => {
-        console.log('loading..', item)
-        navigation.navigate(uiDetails.redirectComponent, { item: item });
+        //console.log('loading..', item)
+        navigation.navigate(uiDetails.redirectComponent, { item: item, user: loggedInUser });
+    };
+
+    const filterBySearch = (input: string) => {
+        let searchResult = itemsData.filter(item => {
+            return item.requestType.toLowerCase().includes(input.toLocaleLowerCase()) ||
+                item.description.toLowerCase().includes(input.toLocaleLowerCase()) ||
+                item.amount.toLowerCase().includes(input.toLocaleLowerCase()) ||
+                item.phone.toLowerCase().includes(input.toLocaleLowerCase());
+        });
+        //console.log('searchResult', searchResult.length);
+        setSearchResult(searchResult);
     };
 
     return (
         <View style={styles.container}>
             <Loader visible={loading} />
             <View>
-                <Search item={{ placeHolder: 'Search by any detail' }} />
+                <Search
+                    PlaceHolder='Search by Details'
+                    FilterBySearch={(search: string) => { filterBySearch(search) }}
+                />
             </View>
-            <CustomButton title="Add New" onPress={() => navigation.navigate(uiDetails.redirectComponent, { item: null })} />
-            <CustomFlatList data={itemsData} selectedId={selectedId} onSelect={(item) => { handleListSelection(item); }} />
+            <CustomButton title="Add New"
+                onPress={() => navigation.navigate(uiDetails.redirectComponent, { item: null, user: loggedInUser })} />
+            <CustomFlatList data={searchResult} selectedId={selectedId} onSelect={(item) => { handleListSelection(item); }} />
         </View>
     );
 };
@@ -74,50 +101,8 @@ const styles = StyleSheet.create({
         flex: 1,
         alignContent: 'center',
         alignItems: 'center',
-        marginHorizontal: 10,
-        marginBottom: 150,
-        height: 500,
-    },
-    cardContainer: {
-        width: '100%'
-    },
-    tile1: {
-        backgroundColor: 'red',
-        height: 150,
-        width: '50%',
-        padding: 5,
-    },
-    item: {
-        padding: 10,
+        marginHorizontal: 5,
         marginBottom: 5,
-        marginHorizontal: 0,
-        flexDirection: 'row',
-    },
-    itemImage: {
-        width: 70,
-        height: 70,
-        borderRadius: 50,
-        marginRight: 8,
-        marginTop: 8,
-    },
-    title: {
-        fontSize: 28,
-    },
-    title2: {
-        fontSize: 18,
-    },
-    title3: {
-        fontSize: 16,
-    },
-    cardRow2: {
-        flex: 1,
-        flexDirection: 'row',
-        color: 'lightgrey',
-    },
-    cardRow3: {
-        flex: 1,
-        flexDirection: 'row',
-        color: 'lightgrey',
     },
 });
 

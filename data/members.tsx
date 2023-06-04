@@ -4,6 +4,7 @@ export interface IMember {
   address?: string;
   phone: string;
   name: string;
+  password: string;
   taluka: string;
   talukaId: number;
   village: string;

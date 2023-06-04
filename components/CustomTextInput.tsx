@@ -4,7 +4,17 @@ import Colors from '../data/colorscheme';
 import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const CustomTextInput = ({ label, data, iconName, error, password, minLength = 8, maxLength = 50, onFocus = () => { }, ...props }) => {
+const CustomTextInput = ({
+    label,
+    data,
+    iconName,
+    error,
+    password,
+    isEditable,
+    maxLength = 50,
+    multiline = false,
+    multilines = 5,
+    onFocus = () => { }, ...props }) => {
 
     const [isFocused, setIsFocused] = useState(false);
     const [hidePassword, setHidePassword] = useState(password);
@@ -23,8 +33,9 @@ const CustomTextInput = ({ label, data, iconName, error, password, minLength = 8
                     secureTextEntry={hidePassword}
                     autoCorrect={false}
                     maxLength={maxLength ? maxLength : 50}
-                    //multiline={true}
-                    //numberOfLines={5}
+                    multiline
+                    editable={isEditable}
+                    numberOfLines={multilines}
                     onFocus={() => {
                         onFocus();
                         setIsFocused(true);

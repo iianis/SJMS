@@ -1,3 +1,62 @@
+import { View, Text, StyleSheet, ImageBackground, Image } from 'react-native'
+import React from 'react'
+
+const WorkInProgress = ({ route }) => {
+  const item = route.params?.item;
+  return (
+    <View style={styles.container}>
+      <ImageBackground
+        source={require('../images/appbackground.jpeg')}
+        style={[styles.image]}>
+        <View style={styles.containerText}>
+          <Text style={styles.text}>{item.title}</Text>
+          <Text style={styles.text2}>{item.description}</Text>
+        </View>
+      </ImageBackground>
+    </View>
+  )
+}
+
+export default WorkInProgress
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  image: {
+    justifyContent: 'center',
+    width: '100%',
+    height: '120%'
+  },
+  containerText: {
+    flex: 1,
+    justifyContent: 'space-around'
+  },
+  text: {
+    color: 'orange',
+    fontSize: 32,
+    lineHeight: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    top: -70,
+    //backgroundColor: '#000000c0',
+  },
+  text2: {
+    color: 'white',
+    fontSize: 24,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    textAlign: 'center',
+    //lineHeight: 84,
+    fontWeight: 'bold',
+    opacity: .4,
+    backgroundColor: '#000000c0',
+  },
+});
+
+/*
 import React from 'react';
 import { Image, StyleSheet, View, Text } from 'react-native';
 
@@ -52,3 +111,5 @@ const styles = StyleSheet.create({
 });
 
 export default WorkInProgress;
+
+*/

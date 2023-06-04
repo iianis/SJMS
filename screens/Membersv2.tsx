@@ -549,12 +549,12 @@ const Membersv2 = () => {
     const [population, setPopulation] = useState(0);
 
     useEffect(() => {
-        console.log('inside usereffect ..');
+        //console.log('inside usereffect ..');
         setDistrictData(districts);
     }, []);
 
     onDistrictChange = value => {
-        console.log('district changed ..:' + value);
+        //console.log('district changed ..:' + value);
 
         let filterTalukas = talukas.filter(taluka => {
             //console.log(taluka.district + ' > ' + taluka.label);
@@ -562,9 +562,9 @@ const Membersv2 = () => {
         });
 
         if (filterTalukas?.length > 0) {
-            console.log('Talukas: ' + filterTalukas.length);
+            //console.log('Talukas: ' + filterTalukas.length);
             setTalukaData(filterTalukas);
-            console.log('Taluka Selected: ' + filterTalukas[0].label);
+            //console.log('Taluka Selected: ' + filterTalukas[0].label);
             setTaluka(filterTalukas[0].value);
             onTalukaChange(filterTalukas[0].label);
         } else {
@@ -573,7 +573,7 @@ const Membersv2 = () => {
     };
 
     onTalukaChange = value => {
-        console.log('taluka changed ..:' + value);
+        //console.log('taluka changed ..:' + value);
 
         let filterVillages = villages.filter(village => {
             //console.log(village.taluka + ' > ' + village.label);
@@ -581,9 +581,9 @@ const Membersv2 = () => {
         });
 
         if (filterVillages?.length > 0) {
-            console.log('Villages: ' + filterVillages.length);
+            //console.log('Villages: ' + filterVillages.length);
             setVillageData(filterVillages);
-            console.log('Village Selected: ' + filterVillages[0].label);
+            //console.log('Village Selected: ' + filterVillages[0].label);
             setVillage(filterVillages[0].value);
             setVillageSelected(filterVillages[0]);
             setFamilies(filterVillages[0].families);
@@ -598,7 +598,7 @@ const Membersv2 = () => {
     };
 
     onVillageChange = value => {
-        console.log('village changed ..:' + value);
+        //console.log('village changed ..:' + value);
         let filterVillages = villages.filter(village => {
             //console.log(village.taluka + ' > ' + village.label);
             return village.label === value;

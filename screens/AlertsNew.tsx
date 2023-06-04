@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Keyboard, Alert } from 'react-native';
-import { eventTypes, IEvent } from '../data/misc';
+import { dBTable, eventTypes, IEvent } from '../data/misc';
 import firestore from '@react-native-firebase/firestore';
 import CustomDropdownList from '../components/CustomDropdownList';
 import CustomTextInput from '../components/CustomTextInput';
@@ -13,13 +13,17 @@ import { talukas, villages } from '../data/geography';
 const AlertsNew = ({ navigation, route }) => {
     //const [selectedId, setSelectedId] = useState(1);
     const item = route.params?.item;
+    const loggedInUser = route.params?.user;
     const [documentId, setDocumentId] = useState('');
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
-    const [selectedDOB, setSelectedDOB] = useState(new Date());
-    const [selectedDOBText, setSelectedDOBText] = useState("");
-    const [villagesByTaluka, setVillagesByTaluka] = useState([]);
     const [datePickerToggle, setDatePickerToggle] = useState(false);
+    const [dateTimePickerMode, setDateTimePickerMode] = useState("date");
+    const [selectedEventDate, setSelectedEventDate] = useState(new Date());
+    const [selectedEventDateText, setSelectedEventDateText] = useState("");
+    const [selectedEventTimeText, setSelectedEventTimeText] = useState("");
+    const [villagesByTaluka, setVillagesByTaluka] = useState([]);
+    const [timePickerToggle, setTimePickerToggle] = useState(false);
     const [uiDetails, setUIDetails] = useState({
         dbTable: "events", redirectComponent: 'Alerts'
     });
@@ -31,6 +35,7 @@ const AlertsNew = ({ navigation, route }) => {
         deleted: false,
         location: 'Satara',
         eventDate: '',
+        eventTime: '',
         createdOn: new Date().toString(),
         createdBy: 'Admin',
         updatedOn: '',
@@ -42,7 +47,7 @@ const AlertsNew = ({ navigation, route }) => {
     useEffect(() => {
         if (item) {
             setInputs(item);
-            handleDOBSet(item.eventDate);
+            handleEventDate(item.eventDate);
             //handleDDLChange("taluka", { id: item.talukaId, name: item.taluka });
             setDocumentId(item.id);
         } else {
@@ -77,12 +82,12 @@ const AlertsNew = ({ navigation, route }) => {
 
     const save = () => {
         setLoading(true);
-        console.log('saving event..');
+        //console.log('saving event..');
         setTimeout(async () => {
             setLoading(false);
             try {
                 await firestore()
-                    .collection(uiDetails.dbTable)
+                    .collection(dBTable(uiDetails.dbTable))
                     .add(inputs)
                     .then(res => {
                         //console.log(res);
@@ -91,21 +96,21 @@ const AlertsNew = ({ navigation, route }) => {
                 Alert.alert("Error", "Event Save - Something went wrong.");
                 console.log(error);
             } finally {
-                navigation.navigate(uiDetails.redirectComponent, { filter: null });
+                navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
             }
         }, 3000)
     };
 
     const update = async () => {
-        console.log('updating event..');
+        //console.log('updating event..');
         try {
             inputs.updatedBy = '';
             inputs.updatedOn = new Date().toString();
-            await firestore().collection(uiDetails.dbTable).doc(documentId).set(inputs);
+            await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
         } catch (error) {
             Alert.alert("Error", "Event Update - Something went wrong.");
         } finally {
-            navigation.navigate(uiDetails.redirectComponent, { filter: null });
+            navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
         }
 
     };
@@ -117,13 +122,13 @@ const AlertsNew = ({ navigation, route }) => {
         try {
             inputs.deleted = true;
             console.log('deleting..2');
-            await firestore().collection(uiDetails.dbTable).doc(documentId).set(inputs);
+            await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
             console.log('deleting..3');
         } catch (error) {
             //console.log('deleting.. Error', error);
             Alert.alert("Error", "Event Update - Something went wrong.");
         } finally {
-            navigation.navigate('Alerts', { filter: null });
+            navigation.navigate('Alerts', { filter: null, user: loggedInUser });
         }
     };
 
@@ -138,20 +143,24 @@ const AlertsNew = ({ navigation, route }) => {
         setInputs(prevState => ({ ...prevState, [fieldId]: changedItem.id }));
     }
 
-    const handleDOBChange = ((event, dobSelected) => {
-        const dobDate = dobSelected || selectedDOB;
-        setInputs(prevState => ({ ...prevState, ["eventDate"]: dobDate }));
+    const handleEventDateChange = ((event, dateSelected) => {
+        const eventDate = dateSelected || selectedEventDate;
+        setInputs(prevState => ({ ...prevState, ["eventDate"]: eventDate }));
         //console.log('innputs', inputs.eventDate);
-        setSelectedDOB(dobDate);
-        let dobInText = dobDate.getDate() + '-' + (dobDate.getMonth() + 1) + '-' + dobDate.getFullYear();
-        setSelectedDOBText(dobInText);
+        setSelectedEventDate(eventDate);
+        let eventDateText = eventDate.getDate() + '-' + (eventDate.getMonth() + 1) + '-' + eventDate.getFullYear();
+        let eventTimeText = eventDate.getHours() + ':' + eventDate.getMinutes();
+        setSelectedEventDateText(eventDateText);
+        setSelectedEventTimeText(eventTimeText);
     });
 
-    const handleDOBSet = ((dateSelected: any) => {
+    const handleEventDate = ((dateSelected: any) => {
         if (!dateSelected) return;
-        console.log('dobSelected', dateSelected);
-        let dateInText = dateSelected.toDate().getDate() + '-' + (dateSelected.toDate().getMonth() + 1) + '-' + dateSelected.toDate().getFullYear();
-        setSelectedDOBText(dateInText);
+        console.log('eventDateSelected', dateSelected);
+        let eventDateText = dateSelected.toDate().getDate() + '-' + (dateSelected.toDate().getMonth() + 1) + '-' + dateSelected.toDate().getFullYear();
+        setSelectedEventDateText(eventDateText);
+        let eventTimeText = dateSelected.toDate().getHours() + ':' + dateSelected.toDate().getMinutes();
+        setSelectedEventTimeText(eventTimeText);
     });
 
     const handleError = (field: string, errorMessage: string) => {
@@ -162,8 +171,8 @@ const AlertsNew = ({ navigation, route }) => {
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
             <ScrollView contentContainerStyle={{ paddingTop: 50, paddingHorizontal: 20 }}>
-                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Event Notifications</Text>
-                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter event details.</Text>
+                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Event Details</Text>
+                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter event information.</Text>
                 <View style={{ marginVertical: 20 }}>
 
                     <CustomDropdownList
@@ -178,7 +187,7 @@ const AlertsNew = ({ navigation, route }) => {
                     <CustomTextInput
                         label="Description"
                         data={inputs.description}
-                        iconName="person"
+                        iconName="description"
                         error={errors.description}
                         placeholder="Enter description"
                         onFocus={() => { handleError('description', null) }}
@@ -187,7 +196,7 @@ const AlertsNew = ({ navigation, route }) => {
                     <CustomTextInput
                         label="Place"
                         data={inputs.location}
-                        iconName="person"
+                        iconName="location-on"
                         error={errors.location}
                         placeholder="Enter location"
                         onFocus={() => { handleError('location', null) }}
@@ -195,24 +204,34 @@ const AlertsNew = ({ navigation, route }) => {
                     />
                     <CustomTextInput
                         label="Date"
-                        data={selectedDOBText}
-                        iconName="person"
+                        data={selectedEventDateText}
+                        iconName="calendar-today"
                         error={errors.eventDate}
                         placeholder="Enter Event Date dd/mm/yy"
-                        onFocus={() => { handleError('eventDate', null); setDatePickerToggle(true); }}
+                        onFocus={() => { handleError('eventDate', null); setDateTimePickerMode("date"); setDatePickerToggle(true); }}
                     //onChangeText={text => handleInputChange('eventDate', text)}
                     />{datePickerToggle && <View><DateTimePicker
-                        value={selectedDOB}
-                        mode="date"
+                        value={selectedEventDate}
+                        mode={dateTimePickerMode}
                         display="default"
                         onChange={(event, data) => {
                             setDatePickerToggle(false);
-                            handleDOBChange(event, data);
+                            handleEventDateChange(event, data);
                         }}
 
                     /></View>}
-                    <CustomButton title="Save" onPress={() => validate()} />
-                    {documentId && <CustomButton title="Delete" bgColor="lightgrey" color="black" onPress={() => deleteEvent()} />}
+
+                    <CustomTextInput
+                        label="Time"
+                        data={selectedEventTimeText}
+                        iconName="access-time"
+                        error={errors.eventDate}
+                        placeholder="Enter Event Time hh:mm"
+                        onFocus={() => { handleError('eventDate', null); setDateTimePickerMode("time"); setDatePickerToggle(true); }}
+                    //onChangeText={text => handleInputChange('eventDate', text)}
+                    />
+                    {loggedInUser.accessLevel > 1 && <CustomButton title="Save" onPress={() => validate()} />}
+                    {documentId && loggedInUser.accessLevel > 2 && <CustomButton title="Delete" bgColor="lightgrey" color="black" onPress={() => deleteEvent()} />}
                 </View>
             </ScrollView>
         </View>

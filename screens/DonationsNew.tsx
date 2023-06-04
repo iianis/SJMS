@@ -1,7 +1,7 @@
 //Member, Registration, Education, Widow Empowerment, Qurbani, Jakat,
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Keyboard, Alert } from 'react-native';
-import { donationTypes, IDonation } from '../data/misc';
+import { dBTable, donationTypes, IDonation } from '../data/misc';
 import CustomDropdownList from '../components/CustomDropdownList';
 import CustomTextInput from '../components/CustomTextInput';
 import CustomButton from '../components/CustomButton';
@@ -14,6 +14,7 @@ import firestore from '@react-native-firebase/firestore';
 const DonationsNew = ({ navigation, route }) => {
     //const [selectedId, setSelectedId] = useState(1);
     const item = route.params?.item;
+    const loggedInUser = route.params.user;
     const [documentId, setDocumentId] = useState('');
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -39,6 +40,9 @@ const DonationsNew = ({ navigation, route }) => {
         updatedBy: '',
         updatedOn: ''
     });
+    const [uiDetails, setUIDetails] = useState({
+        dbTable: "donations", redirectComponent: 'Donations'
+    });
 
     useEffect(() => {
         if (item) {
@@ -52,7 +56,7 @@ const DonationsNew = ({ navigation, route }) => {
 
     const validate = () => {
         Keyboard.dismiss();
-        console.log('validation..', inputs);
+        //console.log('validation..', inputs);
         let valid = true;
 
         if (!inputs.name) {
@@ -70,19 +74,19 @@ const DonationsNew = ({ navigation, route }) => {
 
         //console.log('saving donation..valid', valid);
         if (valid) {
-            console.log('saving donation..documentId', documentId);
+            //console.log('saving donation..documentId', documentId);
             if (documentId) update(); else save();
         }
     }
 
     const save = () => {
         setLoading(true);
-        console.log('saving donation..');
+        //console.log('saving donation..');
         setTimeout(async () => {
             setLoading(false);
             try {
                 await firestore()
-                    .collection('donations')
+                    .collection(dBTable(uiDetails.dbTable))
                     .add(inputs)
                     .then(res => {
                         //console.log(res);
@@ -90,21 +94,21 @@ const DonationsNew = ({ navigation, route }) => {
             } catch (error) {
                 Alert.alert("Error", "Donation Save - Something went wrong.");
             } finally {
-                navigation.navigate('Donations', { filter: null });
+                navigation.navigate('Donations', { filter: null, user: loggedInUser });
             }
         }, 3000)
     };
 
     const update = async () => {
-        console.log('updating donation..');
+        //console.log('updating donation..');
         try {
             inputs.updatedBy = '';
             inputs.updatedOn = new Date().toString();
-            await firestore().collection('donations').doc(documentId).set(inputs);
+            await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
         } catch (error) {
             Alert.alert("Error", "Donation Update - Something went wrong.");
         } finally {
-            navigation.navigate('Donations', { filter: null });
+            navigation.navigate('Donations', { filter: null, user: loggedInUser });
         }
 
     };
@@ -113,16 +117,16 @@ const DonationsNew = ({ navigation, route }) => {
         setLoading(true);
         try {
             inputs.deleted = true;
-            await firestore().collection('donations').doc(documentId).set(inputs);
+            await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
         } catch (error) {
             Alert.alert("Error", "Donation Update - Something went wrong.");
         } finally {
-            navigation.navigate('Donations', { filter: null });
+            navigation.navigate('Donations', { filter: null, user: loggedInUser });
         }
     };
 
     const clearFormFields = () => {
-        console.log('clear donation');
+        //console.log('clear donation');
         setInputs({
             name: '',
             phone: '',
@@ -138,7 +142,6 @@ const DonationsNew = ({ navigation, route }) => {
             receiptNumber: '',
             desc: ''
         });
-        navigation.navigate('Donations');
     }
 
     const loadMemberDetails = (data) => {
@@ -154,9 +157,9 @@ const DonationsNew = ({ navigation, route }) => {
 
     const loadMemberByPhone = async (phone: string) => {
         setLoading(true);
-        console.log('getMember > by phone: ', phone);
+        //console.log('getMember > by phone: ', phone);
         await firestore()
-            .collection('members')
+            .collection(dBTable('members'))
             .where('phone', '==', phone)
             .get()
             .then(memberSnapshot => {
@@ -165,7 +168,7 @@ const DonationsNew = ({ navigation, route }) => {
                         [
                             {
                                 text: 'Ok', onPress: () => {
-                                    console.log('Go ahead and load this Member Information');
+                                    //console.log('Go ahead and load this Member Information');
                                     let data = item.data();
                                     loadMemberDetails(data);
                                 }
@@ -286,8 +289,10 @@ const DonationsNew = ({ navigation, route }) => {
                             handleDDLChange('village', item)
                         }}
                     />
-                    <CustomButton title="Save" onPress={() => validate()} />
-                    {documentId && <CustomButton title="Delete" bgColor="lightgrey" color="black" onPress={() => deleteDonation()} />}
+                    {loggedInUser.accessLevel > 1 &&
+                        <CustomButton title="Save" onPress={() => validate()} />}
+                    {documentId && loggedInUser.accessLevel > 2 &&
+                        <CustomButton title="Delete" bgColor="lightgrey" color="black" onPress={() => deleteDonation()} />}
                 </View>
             </ScrollView>
         </View>

@@ -9,7 +9,7 @@ export const donationTypes: ListItem[] = [
     {
         id: 1, name: 'Education'
     }, {
-        id: 2, name: 'Jaqat'
+        id: 2, name: 'Zaqat'
     }, {
         id: 3, name: 'Qurbani'
     }, {
@@ -56,6 +56,7 @@ export interface IEvent {
     deleted: boolean;
     location?: string;
     eventDate: string;
+    eventTime: string;
     eventExpires?: string;
     createdOn?: string;
     createdBy?: string;
@@ -65,14 +66,14 @@ export interface IEvent {
 
 export const eventTypes: ListItem[] = [
     { id: 1, name: 'Meeting' },
-    { id: 2, name: 'Wedding' },
-    { id: 3, name: 'Achievements' },
-    { id: 4, name: 'Medical' },
-    { id: 5, name: 'Sports' },
-    { id: 9, name: 'Death' },
-    { id: 10, name: 'Meeting - Annual General' },
     { id: 11, name: 'Meeting - Director Board' },
+    { id: 10, name: 'Meeting - Annual General' },
     { id: 12, name: 'Meeting - Adhiveshan' },
+    { id: 3, name: 'Achievements' },
+    { id: 5, name: 'Sports' },
+    { id: 4, name: 'Medical Camp' },
+    { id: 2, name: 'Wedding' },
+    { id: 9, name: 'Death' },
     { id: 99, name: 'Other' },
 ];
 
@@ -89,7 +90,7 @@ export interface IRequest {
     villageId: number;
     district: string;
     deleted: boolean;
-    approvedOn: string;
+    approvedDate: string;
     approved?: boolean;
     paid?: boolean;
     createdOn?: string;
@@ -105,16 +106,29 @@ export const requestTypes: ListItem[] = [
     { id: 99, name: 'Other' },
 ];
 
-export const environments = {
-    Dev: 1,
-    Sandbox: 2,
-    Prod: 3
+export const environment = {
+    title: "dev" // sand // prod
 }
 
-export const dBTables = {
-    requests: 1,
-    members: 2,
-    donations: 3,
-    alerts: 4,
-    schemes: 5,
+export interface IdBTable {
+    requests: string;
+    members: string;
+    donations: string;
+    events: string;
+    alerts: string;
+    schemes: string;
 };
+
+export const dBTables: IdBTable = {
+    requests: "requests",
+    members: "members",
+    donations: "donations",
+    events: "events",
+    alerts: "alerts",
+    schemes: "schemes",
+};
+
+export const dBTable = (tableName: string) => {
+    //console.log("table 2 fetch from:", environment.title + dBTables[tableName]);
+    return environment.title + "-" + dBTables[tableName];
+}

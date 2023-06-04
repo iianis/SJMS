@@ -11,6 +11,7 @@ const Colors = {
   blue: '#5D5FEE',
   grey: '#BABBC3',
   darkgrey: 'grey',
+  lightgrey: 'lightgrey',
   light: '#F3F4FB',
   darkblue: '#7978B5',
   red: 'red',

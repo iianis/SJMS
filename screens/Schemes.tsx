@@ -1,62 +1,90 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   FlatList,
   TouchableOpacity,
   Text,
-  TextInput,
+  TextInput, LogBox
 } from 'react-native';
+import CustomButton from '../components/CustomButton';
+import CustomFlatList from '../components/CustomFlatList';
+import Loader from '../components/Loader';
 import Search from '../components/Search';
+import firestore from '@react-native-firebase/firestore';
+import { dBTable } from '../data/misc';
 
-const Schemes = ({navigation}) => {
+const Schemes = ({ navigation, route }) => {
+  const loggedInUser = route.params.user;
   const [selectedId, setSelectedId] = useState(null);
+  const [searchResult, setSearchResult] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [itemsData, setItemsData] = useState([]);
+  const [uiDetails, setUIDetails] = useState({
+    dbTable: "schemes", redirectComponent: 'Intro'
+  });
 
-  const Item = ({item, onPress, backgroundColor, textColor}) => (
-    <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
-      <Text style={[styles.title, textColor]}>{item.title}</Text>
-      <View style={styles.cardRow2}>
-        <Text style={[styles.title2, textColor]}>Description: {item.desc}</Text>
-        <Text style={[styles.title2, textColor]}>, {item.active}</Text>
-      </View>
-      <View style={styles.cardRow3}>
-        <Text style={[styles.title2, textColor]}>
-          Dates: {item.applicationOpenDate}, {item.applicationCloseDate}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+    const unsubscribe = navigation.addListener('focus', async () => {
+      setItemsData([]);
+      setSearchResult([]);
+      getItems();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
-  const renderItem = ({item}) => {
-    const backgroundColor = item.id === selectedId ? '#F9D162' : '#009387';
-    const color = item.id === selectedId ? 'white' : 'black';
+  const getItems = async () => {
+    setLoading(true);
+    await firestore()
+      .collection(dBTable(uiDetails.dbTable))
+      .where('deleted', '==', false)
+      //.where('donationType', '>=', searchText)
+      //.where('donationType', '<=', searchText + '\uf8ff')
+      .limit(50)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          if (doc?.exists) {
+            let itemDoc = doc.data();
+            itemDoc.id = doc.id;
+            setItemsData(items => [...items, itemDoc]);
+            setSearchResult(items => [...items, itemDoc]);
+          } else {
+            console.log('No records found!');
+          }
+          setLoading(false);
+        });
+        setLoading(false);
+      });
+  };
 
-    return (
-      <Item
-        item={item}
-        onPress={() => {
-          setSelectedId(item.id);
-          //navigation.navigate('MemberDetails', {item: item});
-        }}
-        backgroundColor={{backgroundColor}}
-        textColor={{color}}
-      />
-    );
+  const handleListSelection = (item: any) => {
+    //console.log("list item selected ", item);
+    navigation.navigate('SchemesNew', { item: item, user: loggedInUser });
+  };
+
+  const filterBySearch = (input: string) => {
+    let searchResult = itemsData.filter(item => {
+      return item.name.toLowerCase().includes(input.toLocaleLowerCase()) ||
+        item.description.toLowerCase().includes(input.toLocaleLowerCase());
+    });
+    //console.log('searchResult', searchResult.length);
+    setSearchResult(searchResult);
   };
 
   return (
     <View style={styles.container}>
       <View>
-        <Search item={{placeHolder: 'Search by Scheme Name'}} />
-      </View>
-      <View>
-        <FlatList
-          data={schemes}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          extraData={selectedId}
+        <Search
+          PlaceHolder='Search by Details'
+          FilterBySearch={(search: string) => { filterBySearch(search) }}
         />
       </View>
+      <Loader visible={loading} />
+      {loggedInUser.accessLevel > 1 && <CustomButton title="Add New" onPress={() => navigation.navigate('SchemesNew', { item: null, user: loggedInUser })} />}
+      <CustomFlatList data={searchResult} selectedId={selectedId} onSelect={(item: IScheme) => { handleListSelection(item); }} />
     </View>
   );
 };
@@ -68,72 +96,46 @@ const styles = StyleSheet.create({
     flex: 1,
     alignContent: 'center',
     alignItems: 'center',
-  },
-  tile1: {
-    backgroundColor: 'red',
-    height: 150,
-    width: '50%',
-    padding: 5,
-  },
-  item: {
-    padding: 10,
-    marginVertical: 10,
     marginHorizontal: 10,
-  },
-  title: {
-    fontSize: 30,
-  },
-  title2: {
-    fontSize: 16,
-  },
-  cardRow2: {
-    flex: 1,
-    flexDirection: 'row',
-    color: 'lightgrey',
-  },
-  cardRow3: {
-    flex: 1,
-    flexDirection: 'row',
-    color: 'lightgrey',
-  },
-  textInput: {
-    borderBottomColor: 'grey',
-    borderWidth: 1,
-    borderRadius: 10,
-  },
+  }
 });
 
-export interface scheme {
+export interface IScheme {
   id: number;
-  title: string;
-  desc: string;
-  active: boolean;
-  applicationOpenDate: string;
-  applicationCloseDate: string;
+  title?: string;
+  name?: string;
+  description: string;
+  deleted: boolean;
+  applicationOpenDate?: string;
+  applicationCloseDate?: string;
+  createdOn?: string;
+  createdBy?: string;
+  updatedOn?: string;
+  updatedBy?: string;
 }
 
-export const schemes: scheme[] = [
+export const schemes: IScheme[] = [
   {
     id: 1,
-    title: 'Maulana Azad Minorities financial development corporation',
-    desc: '29, Shahid Bhagat Singh Marg, Kala Ghoda, Fort, Mumbai. Contact: 022 2267 2293',
-    active: true,
+    name: 'Maulana Azad Minorities financial development corporation',
+    description: '29, Shahid Bhagat Singh Marg, Kala Ghoda, Fort, Mumbai. Contact: 022 2267 2293',
+    deleted: true,
     applicationOpenDate: '1/12/2022',
     applicationCloseDate: '31/12/2022',
   },
   {
     id: 2,
-    title: 'Nationalized Bank Loan',
-    desc: 'MH',
-    active: true,
+    name: 'Nationalized Bank Loan',
+    description: 'MH',
+    deleted: true,
     applicationOpenDate: '1/12/2022',
     applicationCloseDate: '31/12/2022',
   },
   {
     id: 3,
-    title: 'Savitribai Phule Scholaship',
-    desc: 'Pune',
-    active: true,
+    name: 'Savitribai Phule Scholaship',
+    description: 'Pune',
+    deleted: true,
     applicationOpenDate: '1/12/2022',
     applicationCloseDate: '31/12/2022',
   },

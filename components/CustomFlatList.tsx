@@ -21,6 +21,11 @@ const CustomFlatList = ({ data, selectedId, onSelect }) => {
                 </View>
             }
             {
+                !item.donationType && !item.requestType && item.name && <View style={styles.cardRow2}>
+                    <Text style={[styles.title, textColor]}>{item.name}</Text>
+                </View>
+            }
+            {
                 item.description && <View style={styles.cardRow2}>
                     <Text style={[styles.title2, textColor]}>Description: {item.description}</Text>
                 </View>
@@ -46,8 +51,8 @@ const CustomFlatList = ({ data, selectedId, onSelect }) => {
                 </View>
             }
             {
-                item.requestType && item.approved && <View style={styles.cardRow2}>
-                    <Text style={[styles.title2, textColor]}>Approved Date: {item.approvedDate}</Text>
+                item.requestType && item.approved && item.approvedDate && <View style={styles.cardRow2}>
+                    <Text style={[styles.title2, textColor]}>Approved Date: {new Date(item.approvedDate.toString()).toLocaleString()}</Text>
                 </View>
             }
             {
@@ -62,7 +67,7 @@ const CustomFlatList = ({ data, selectedId, onSelect }) => {
             }
             {
                 item.eventDate && <View style={styles.cardRow3}>
-                    <Text style={[styles.title2, textColor]}>Date: {new Date(item.eventDate.toDate().toString()).toLocaleDateString()}, Place: {item.location}</Text>
+                    <Text style={[styles.title2, textColor]}>Date: {new Date(item.eventDate.toDate().toString()).toLocaleString()}, Place: {item.location}</Text>
                 </View>
             }
         </TouchableOpacity>
@@ -108,7 +113,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     cardContainer: {
-        width: '100%', height: '98%'
+        flex: 1,
+        width: '100%', height: '100%'
     },
     cardRow: {
         padding: 10,

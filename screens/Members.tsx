@@ -9,32 +9,42 @@ import {
 } from 'react-native';
 import Search from '../components/Search';
 import firestore from '@react-native-firebase/firestore';
-//import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../components/CustomButton';
 import Loader from '../components/Loader';
+import { dBTable } from '../data/misc';
 
 const Members = ({ navigation, route }) => {
-
   const { height, width } = Dimensions.get('window');
   const filter = route.params.filter;
+  const loggedInUser = route.params.user;
+  //console.log('route.params', route.params);
   const [selectedId, setSelectedId] = useState(null);
   const [membersData, setMembersData] = useState([]);
+  const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uiDetails, setUIDetails] = useState({
+    dbTable: "members", redirectComponent: 'Intro'
+  });
 
-  //console.log(item);
   useEffect(() => {
-    navigation.addListener('focus', async () => {
-      getMembers();
-      //console.log('UseEffect .. onfocus');
+    const unsubscribe = navigation.addListener('focus', async () => {
+      //console.log('route.params: loggedInUser.accessLevel', loggedInUser.accessLevel);
+      setMembersData([]);
+      setSearchResult([]);
+      setTimeout(() => {
+        //console.log('date cleared?', membersData.length);
+        getMembers();
+      }, 1000);
     });
-  }, []);
+    return unsubscribe;
+  }, [navigation]);
 
   const getMembers = async () => {
     setLoading(true);
     setMembersData([]);
 
     await firestore()
-      .collection('members')
+      .collection(dBTable(uiDetails.dbTable))
       .orderBy('name')
       .limit(50)
       .get()
@@ -49,8 +59,10 @@ const Members = ({ navigation, route }) => {
             if (memberDoc.memberType == filter) {
               //console.log('memberDoc type: ' + memberDoc.memberType + ", filter: " + filter);
               setMembersData(members => [...members, memberDoc]);
+              setSearchResult(members => [...members, memberDoc]);
             } else if (filter && filter == "Member") {
               setMembersData(members => [...members, memberDoc]);
+              setSearchResult(members => [...members, memberDoc]);
             } else if (filter && filter == "Director"
               && (memberDoc.memberType == "Director" ||
                 memberDoc.memberType == "Secretary" ||
@@ -58,6 +70,7 @@ const Members = ({ navigation, route }) => {
                 memberDoc.memberType == "President" ||
                 memberDoc.memberType == "Vice-president")) {
               setMembersData(members => [...members, memberDoc]);
+              setSearchResult(members => [...members, memberDoc]);
             }
             else {
               console.log('Else memberDoc type: ' + memberDoc.memberType + ", filter: " + filter);
@@ -75,7 +88,8 @@ const Members = ({ navigation, route }) => {
     <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
       <View>
         <Image
-          source={require('../images/members/profile.jpg')}
+          //source={require('../images/members/' + { item.phone } + '.jpg')}
+          source={{ uri: '../images/members/' + '9841000121' + '.jpg' }}
           style={styles.itemImage}
         />
       </View>
@@ -106,7 +120,7 @@ const Members = ({ navigation, route }) => {
         item={item}
         onPress={() => {
           setSelectedId(item.id);
-          navigation.navigate('MemberNew', { item: item });
+          navigation.navigate('MemberNew', { item: item, user: loggedInUser });
         }}
         key={Math.random().toString(36).toString(7)}
         backgroundColor={{ backgroundColor }}
@@ -115,25 +129,27 @@ const Members = ({ navigation, route }) => {
     );
   };
 
-  /*let [searchResult, setSearchResult] = useState[];
-
-const filterBySearch = (input: string) => {
-  searchResult = members.filter(item => {
-    return item.name.toLowerCase().includes(input.toLocaleUpperCase());
-  });
-  setSearchResult(searchResult);
-};*/
+  const filterBySearch = (input: string) => {
+    let searchResult = membersData.filter(item => {
+      //console.log('member', input.toLocaleLowerCase());
+      return item.name.toLowerCase().includes(input.toLocaleLowerCase()) ||
+        item.taluka.toLowerCase().includes(input.toLocaleLowerCase()) ||
+        item.phone.toLowerCase().includes(input.toLocaleLowerCase());
+    });
+    //console.log('searchResult', searchResult.length);
+    setSearchResult(searchResult);
+  };
 
   return (
     <View style={styles.container}>
       <Loader visible={loading} />
-      <View>
-        <Search item={{ placeHolder: 'Search by Name, Taluka, Phone' }} />
+      <View style={styles.containerChild1}>
+        <Search PlaceHolder='Search by Name, Taluka, Phone' FilterBySearch={(search: string) => { filterBySearch(search) }} />
       </View>
-      <CustomButton title="Add New" onPress={() => navigation.navigate('MemberNew', { item: null })} />
-      <View style={[styles.cardContainer]}>
+      {loggedInUser?.accessLevel > 1 && <CustomButton title="Add New" onPress={() => navigation.navigate('MemberNew', { item: null, user: loggedInUser })} />}
+      <View style={styles.containerChild2}>
         <FlatList
-          data={membersData}
+          data={searchResult}
           renderItem={renderItem}
           //keyExtractor={item => item.id}
           keyExtractor={item => item.id}
@@ -151,12 +167,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 10,
-    marginBottom: 150,
-    height: 500,
+    marginHorizontal: 5,
+    marginBottom: 5,
   },
-  cardContainer: {
-    width: '100%'
+  containerChild1: {
+  },
+  containerChild2: {
+    flex: 1,
+    height: '100%',
+    width: '100%',
   },
   tile1: {
     backgroundColor: 'red',

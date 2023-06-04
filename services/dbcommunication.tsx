@@ -37,11 +37,11 @@ const getMember = async (documentId) => {
 };
 
 const updateMember = async (documentId, memberData) => {
-  console.log('updating..');
+  //console.log('updating..');
   await firestore().collection('members').doc(documentId).set(memberData);
 };
 const addMember = async (memberData) => {
-  console.log('adding..');
+  //console.log('adding..');
   await firestore()
     .collection('members')
     .add(memberData)

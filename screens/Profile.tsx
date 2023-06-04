@@ -118,7 +118,7 @@ const Profile = ({ navigation, route }) => {
             setMemberData(doc.data());
             setDocumentId(doc.id);
           } else {
-            console.log(Math.random().toString(36).toString(7));
+            //console.log(Math.random().toString(36).toString(7));
             setDocumentId(Math.random().toString(36).toString(7));
           }
         });

@@ -10,18 +10,22 @@ import { talukas, villages } from '../data/geography'
 import firestore from '@react-native-firebase/firestore';
 import { educations, IMember, memberPublicTypes, memberType, relations, works } from '../data/members';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { dBTable } from '../data/misc';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MemberNew = ({ navigation, route }) => {
     const item = route.params?.item;
+    const loggedInUser = route.params?.user;
     const [documentId, setDocumentId] = useState('');
     const [villagesByTaluka, setVillagesByTaluka] = useState([]);
     const [inputs, setInputs] = useState<IMember>({
         phone: '',
+        password: '1234',
         name: '',
         taluka: '',
         talukaId: 0,
-        villageId: 0,
         village: '',
+        villageId: 0,
         district: 'Satara',
         districtId: 1,
         address: '',
@@ -49,8 +53,21 @@ const MemberNew = ({ navigation, route }) => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(true);
     const [dobToggle, setDOBToggle] = useState(false);
+    const [itemEditable, setItemEditable] = useState(false);
     const [selectedDOB, setSelectedDOB] = useState(new Date());
     const [selectedDOBText, setSelectedDOBText] = useState("");
+    const [uiDetails, setUIDetails] = useState({
+        dbTable: "members", redirectComponent: 'Members'
+    });
+
+    useEffect(() => {
+        console.log('loading selected user..', route.params);
+        if (item) {
+            loadMember();
+        } else {
+            setLoading(false);
+        }
+    }, []);
 
     const validate = () => {
         Keyboard.dismiss();
@@ -84,49 +101,65 @@ const MemberNew = ({ navigation, route }) => {
     }
     const save = () => {
         setLoading(true);
-        console.log('adding..');
+        //console.log('adding..');
         setTimeout(async () => {
             setLoading(false);
             try {
                 //AsyncStorage.setItem('user', JSON.stringify(inputs));
                 await firestore()
-                    .collection('members')
+                    .collection(dBTable(uiDetails.dbTable))
                     .add(inputs)
                     .then(res => {
                         //console.log(res);
                     });
-                //navigation.navigate('Members', { filter: null });
-                //navigation.navigate("Intro");
             } catch (error) {
                 Alert.alert("Error", "Member Save - Something went wrong.");
             } finally {
-                navigation.navigate('Members', { filter: null });
+                navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
             }
         }, 3000)
     }
+
     const update = async () => {
-        console.log('updating..');
+        //console.log('updating..');
         try {
-            await firestore().collection('members').doc(documentId).set(inputs);
+            await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
         } catch (error) {
             Alert.alert("Error", "Member Update - Something went wrong.");
         } finally {
-            navigation.navigate('Members', { filter: null });
+            navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
         }
 
     };
 
-    useEffect(() => {
-        if (item) {
-            loadMember();
-        } else setLoading(false);
-    }, []);
+    const loadMember = async () => {
+        setLoading(true);
+        await firestore()
+            .collection(dBTable(uiDetails.dbTable))
+            .doc(item.id)
+            .get()
+            .then(memberSnapshot => {
+                if (memberSnapshot.exists) {
+                    let data = memberSnapshot.data();
+                    //console.log('loadMember > 1', loggedInUser);
+                    loadMemberDetails(data, memberSnapshot.id);
+                    if (data.phone == loggedInUser.phone || data.familyPhone == loggedInUser.phone) {
+                        setItemEditable(true);
+                        console.log('User can Edit this record');
+                    }
+                } else {
+                    console.log("No matching member found! documentId: ", documentId);
+                    setDocumentId('');
+                }
+                setLoading(false);
+            });
+    };
 
     const loadMemberDetails = (data, memberId, isFamilyPhone = false) => {
         if (!isFamilyPhone) {
             setInputs(data);
-            handleDOBSet(data.dob.toDate());
-            setSelectedDOB(data.dob.toDate());
+            if (data.dob) handleDOBSet(data.dob.toDate());
+            if (data.dob) setSelectedDOB(data.dob.toDate());
             setDocumentId(memberId);
         } else {
             setInputs(prevState => ({ ...prevState, ['taluka']: data.taluka }));
@@ -138,29 +171,11 @@ const MemberNew = ({ navigation, route }) => {
         handleDDLChange("taluka", { id: data.talukaId, name: data.taluka });
     };
 
-    const loadMember = async () => {
-        setLoading(true);
-        await firestore()
-            .collection('members')
-            .doc(item.id)
-            .get()
-            .then(memberSnapshot => {
-                if (memberSnapshot.exists) {
-                    let data = memberSnapshot.data();
-                    loadMemberDetails(data, memberSnapshot.id);
-                } else {
-                    console.log("No matching member found! documentId: ", documentId);
-                    setDocumentId('');
-                }
-                setLoading(false);
-            });
-    };
-
     const loadMemberByPhone = async (phone: string, familyPhone: boolean = false) => {
         setLoading(true);
-        console.log('getMember > by phone: ', phone);
+        //console.log('getMember > by phone: ', phone);
         await firestore()
-            .collection('members')
+            .collection(dBTable(uiDetails.dbTable))
             .where('phone', '==', phone)
             .get()
             .then(memberSnapshot => {
@@ -260,8 +275,8 @@ const MemberNew = ({ navigation, route }) => {
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
             <ScrollView contentContainerStyle={{ paddingTop: 50, paddingHorizontal: 20 }}>
-                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Member</Text>
-                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter member details</Text>
+                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Member Details</Text>
+                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Update member information</Text>
                 <View style={{ marginVertical: 20 }}>
 
                     <CustomDropdownList
@@ -353,14 +368,15 @@ const MemberNew = ({ navigation, route }) => {
                         />
                     </View>
                     }
-                    <View style={{ marginTop: 20 }}>
-                        <Text
-                            style={{ fontSize: 14, fontWeight: 'bold' }}
-                            onPress={() => { setDOBToggle(true); }}>
-                            Date of Birth: {selectedDOBText}
-                        </Text>
-                    </View>
-                    {dobToggle && <View><DateTimePicker
+
+                    <CustomTextInput
+                        label="Date of Birth"
+                        data={selectedDOBText}
+                        iconName="calendar-today"
+                        error={errors.dob}
+                        placeholder="dd/mm/yyyy"
+                        onFocus={() => { handleError('dob', null); setDOBToggle(true); }}
+                    />{dobToggle && <View><DateTimePicker
                         value={selectedDOB}
                         mode="date"
                         display="default"
@@ -370,7 +386,7 @@ const MemberNew = ({ navigation, route }) => {
                         }}
 
                     /></View>}
-                    <CustomButton title="Save" onPress={() => validate()} />
+                    {(itemEditable || loggedInUser.accessLevel > 1) && <CustomButton title="Save" onPress={() => validate()} />}
                 </View>
             </ScrollView>
         </View>

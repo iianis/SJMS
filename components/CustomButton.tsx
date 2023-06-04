@@ -10,10 +10,11 @@ const CustomButton = ({ title, bgColor, color, onPress = () => { } }) => {
             style={{
                 height: 55,
                 width: '100%',
+                borderRadius: 10,
                 backgroundColor: bgColor ? bgColor : Colors.blue,
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginVertical: 20
+                marginVertical: 10
             }}>
             <Text style={{ color: (color ? color : Colors.white), fontWeight: 'bold', fontSize: 18 }}>
                 {title}

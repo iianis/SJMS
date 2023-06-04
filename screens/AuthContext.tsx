@@ -1,59 +1,87 @@
 import React, { createContext, useState, useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
+import { dBTable } from '../data/misc';
 
 export const AuthContext = createContext("MyAppContext");
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }: any) => {
     const [isLoading, setIsLoading] = useState(false);
     const [userToken, setUserToken] = useState(null);
+    const [userDetails, setUserDetails] = useState({
+        name: '', phone: '', accessLevel: 1,
+        taluka: 'Satara', talukaId: 1, village: 'Satara', villageId: 1, securityToken: ""
+    });
+    const [uiDetails, setUIDetails] = useState({
+        dbTable: "members", redirectComponent: 'Members'
+    });
 
-    const login = async () => {
-        //console.log("validating login 1");
+    const login = async (phone: string, password: string) => {
+        //console.log("login in progress",);
         setIsLoading(true);
-        //console.log("validating login 2");
         setUserToken(null);
+        let response = "";
 
-        await firestore()
-            .collection('members')
-            .where('phone', '==', "9886174607")
-            .where('secureKey', '==', "1236")
-            .get()
-            .then(memberSnapshot => {
-                console.log("validating login 3");
-                memberSnapshot.forEach(async (item) => {
-                    //console.log("validating login 4 -success");
-                    //console.log('member details', item.id, item.data().name, item.data().secureKey);
-                    setUserToken("thisisahighlysecurejwtoken");
-                    await AsyncStorage.setItem('userToken', "thisisahighlysecurejwtoken");
-                })
-                //console.log("validating login 5");
-                setIsLoading(false);
-            });
-
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 1000);
-    };
-    const logout = async () => {
-        setUserToken(null);
-        setIsLoading(false);
-        //console.log('userToken 11', userToken);
-        await AsyncStorage.removeItem('userToken');
-        setUserToken(null);
-        //console.log('userToken 12', userToken);
-    };
-    const isLoggedin = async () => {
         try {
-            let userToken = await AsyncStorage.getItem('userToken');
-            console.log('userToken 13', userToken);
-            setUserToken(userToken);
-        } catch (ex) {
-            console.log('Error while reading AsyncStorage.getItem(userToken)', ex);
+            await firestore()
+                .collection(dBTable(uiDetails.dbTable))
+                .where('phone', '==', phone)
+                .where('password', '==', password)
+                .get()
+                .then(memberSnapshot => {
+                    //setIsLoading(false);
+                    if (!memberSnapshot || memberSnapshot.size <= 0) {
+                        response = "failed";
+                    }
+                    memberSnapshot.forEach(async (item) => {
+                        setUserToken("thisisahighlysecurejwtoken");
+                        //await AsyncStorage.setItem('userToken', "thisisahighlysecurejwtoken");
+                        let itemDoc = item._data;
+                        response = "success";
+                        await AsyncStorage.multiSet([['userToken', "thisisahighlysecurejwtoken"], ['phone', phone]]);
+                        let user = {
+                            name: itemDoc.name,
+                            phone: itemDoc.phone,
+                            accessLevel: itemDoc.accessLevel ? itemDoc.accessLevel : 1,
+                            taluka: itemDoc.taluka,
+                            talukaId: itemDoc.talukaId,
+                            village: itemDoc.village,
+                            villageId: itemDoc.villageId,
+                            securityToken: "thisisahighlysecurejwtoken"
+                        };
+                        setUserDetails(user);
+                        console.log("login success.", user);
+                        await AsyncStorage.setItem('user', JSON.stringify(user));
+                    })
+                });
+
+            return response;
+        } catch (e) {
+            console.log("Error Login API", e);
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    const logout = async () => {
+        setUserToken(null);
+        setIsLoading(false);
+        //console.log('logout in progress');
+        await AsyncStorage.removeItem('userToken');
+        await AsyncStorage.multiRemove(['userToken', 'phone']);
+    };
+
     useEffect(() => {
+        const isLoggedin = async () => {
+            try {
+                let userToken = await AsyncStorage.getItem('userToken');
+                //console.log('userToken 13', userToken);
+                setUserToken(userToken);
+            } catch (ex) {
+                console.log('Error while reading AsyncStorage.getItem(userToken)', ex);
+            }
+        };
+
         isLoggedin();
     }, []);
 

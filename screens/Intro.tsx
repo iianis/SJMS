@@ -3,24 +3,100 @@ import React, { useState, useEffect, useContext } from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import InternetConnected from '../components/InternetConnected';
 import { AuthContext } from './AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import firestore from '@react-native-firebase/firestore';
+import { dBTable, dBTables } from '../data/misc';
 
-const Intro = ({ navigation }: { navigation: any }) => {
+const Intro = ({ navigation, route }: { navigation: any }) => {
+    const user = route.params?.item;
+    const [isLoading, setIsLoading] = useState(false);
+    const [memberCount, setMemberCount] = useState(0);
+    const [beneficiaryCount, setBeneficiaryCount] = useState(0);
+    const [donationAmount, setDonationAmount] = useState(0);
     const { logout } = useContext(AuthContext);
+    const [phone, setPhone] = useState('');
+    const [loggedInUser, setLoggedInUser] = useState();
+
     useEffect(() => {
-        //setFilteredTalukas(talukas);
+        //console.log('Intro 1:');
+        getLoggedInUser();
+        //console.log('Intro 4:');
+        navigation.addListener('focus', async () => {
+            getSummary();
+        });
     }, []);
 
+    const getLoggedInUser = async () => {
+        //console.log('Intro 2:');
+        let user = await AsyncStorage.getItem('user');
+        await setLoggedInUser(JSON.parse(user));
+        //console.log('Intro 3:');
+    };
+
+    const getSummary = async () => {
+        //console.log("get summary in progress");
+        setIsLoading(true);
+
+        try {
+            await firestore()
+                .collection(dBTable("members"))
+                .get()
+                .then(querySnapshot => {
+                    //setIsLoading(false);
+                    if (querySnapshot.size > 0) {
+                        //console.log("members", querySnapshot.size);
+                        setMemberCount(querySnapshot.size);
+                    }
+
+                });
+            await firestore()
+                .collection(dBTable("requests"))
+                .get()
+                .then(querySnapshot => {
+                    //setIsLoading(false);
+                    if (querySnapshot.size > 0) {
+                        //console.log("requests", querySnapshot.size);
+                        setBeneficiaryCount(querySnapshot.size);
+                    }
+                });
+            await firestore()
+                .collection(dBTable("donations"))
+                .get()
+                .then(querySnapshot => {
+                    let donation = 0;
+                    querySnapshot.forEach(async (item) => {
+                        donation += parseInt(item.data().amount);
+                    })
+                    setDonationAmount(donation);
+                });
+        } catch (e) {
+            console.log("Error fetching App Summary", e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
     const cardSelected = (cardName: string) => {
         switch (cardName) {
-            case "feesdonations": navigation.navigate("Donations"); break;
-            case "events": navigation.navigate("Alerts"); break;
-            case "schemes": navigation.navigate("Schemes"); break;
-            case "requests": navigation.navigate("Requests"); break;
-            case "members": navigation.navigate("Members", { filter: "Member" }); break;
-            case "profile": navigation.navigate("Profile", { item: null }); break;
-            case "matrimonial": navigation.navigate("WorkInProgress", { item: { title: 'Matrimonial' } }); break;
-            case "jobs": navigation.navigate("WorkInProgress", { item: { title: 'Jobs' } }); break;
-
+            case "members": navigation.navigate("Members", { item: null, user: loggedInUser, filter: "Member" }); break;
+            case "events": navigation.navigate("Alerts", { item: null, user: loggedInUser }); break;
+            case "feesdonations": navigation.navigate("Donations", { item: null, user: loggedInUser }); break;
+            case "schemes": navigation.navigate("Schemes", { item: null, user: loggedInUser }); break;
+            case "requests": navigation.navigate("Requests", { item: null, user: loggedInUser }); break;
+            case "profile": navigation.navigate("Profile", { item: null, user: loggedInUser }); break;
+            case "education": navigation.navigate("Schemes", { item: null, user: loggedInUser }); break;
+            case "jobs": navigation.navigate("WorkInProgress", {
+                item: {
+                    title: 'Jobs',
+                    description: "Our team is working on this idea. Please let us know if you have any suggestions. Our team would be more than happy to work on them."
+                }, user: loggedInUser
+            }); break;
+            case "matrimonial": navigation.navigate("WorkInProgress", {
+                item: {
+                    title: 'Matrimonial',
+                    description: "Our team is working on this idea. Please let us know if you have any suggestions. Our team would be more than happy to work on them."
+                }, user: loggedInUser
+            });
+                break;
         }
     };
 
@@ -44,12 +120,12 @@ const Intro = ({ navigation }: { navigation: any }) => {
                         Our main focus is on Education, HealthCare, and Other needs of our
                         community. We try to reachout to our members who are blessed and doing
                         well by the grace of Allah, to come forward and contribute for different
-                        causes/occasions like Education, Jaqat, Sadaqa, Qurbani, and other
+                        causes/occasions like Education, Zaqat, Sadaqa, and other
                         voluntary reasons.
                     </Text>
                 </View>
                 <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Founder</Text>
+                    <Text style={styles.sectionHeader}>FOUNDER</Text>
                 </View>
                 <View style={styles.sectionMain}>
                     <Image
@@ -57,7 +133,7 @@ const Intro = ({ navigation }: { navigation: any }) => {
                         style={styles.cardImage}
                     />
                     <Text style={styles.sectionText}>
-                        Late Mr. Nijamuddin S. Shikalgar
+                        Late Mr. Nijamuddin Shikalgar
                     </Text>
                 </View>
                 <View style={styles.section}>
@@ -65,53 +141,62 @@ const Intro = ({ navigation }: { navigation: any }) => {
                 </View>
                 <View style={styles.sectionMain}>
                     <Text style={styles.sectionText}>
-                        Please join us on this journey to help our brothers and sisters to achieve their dreams. This would definitely give you a feel of satisfaction in the cause of Almighty.
+                        Please join us on this journey to help our families and relatives to fulfill their dreams. This would definitely give you a feel of satisfaction in the cause of Almighty.
                     </Text>
                 </View>
                 <TouchableOpacity onPress={() => { cardSelected("members"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
-                    <Text style={[styles.title, { color: 'white' }]}>Members</Text>
+                    <Text style={[styles.title, { color: 'white' }]}>Members - {memberCount}</Text>
                     <Image source={require('../images/members.jpg')} style={{ height: 200, width: '100%' }} />
                     <View style={styles.cardRow2}>
-                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>Contribute and be a part of the change.</Text>
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { cardSelected("events"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
-                    <Text style={[styles.title, { color: 'white' }]}>Events & Notifications</Text>
-                    <Image source={require('../images/alerts.png')} style={{ height: 200, width: '100%' }} />
-                    <View style={styles.cardRow2}>
-                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Alerts and Notifications for Meetings, Activities, & unforseen Events.</Text>
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { cardSelected("requests"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
-                    <Text style={[styles.title, { color: 'white' }]}>Need Help?</Text>
-                    <Image source={require('../images/requests.png')} style={{ height: 200, width: '100%' }} />
-                    <View style={styles.cardRow2}>
                         <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>
-                            If you are in a need, please reach out to us by posting a request with due details.
-                            Which inturn would be reviewed by our senior members.</Text>
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { cardSelected("feesdonations"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
-                    <Text style={[styles.title, { color: 'white' }]}>Fees & Donations</Text>
-                    <Image source={require('../images/donations.jpg')} style={{ height: 200, width: '100%' }} />
-                    <View style={styles.cardRow2}>
-                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>List of community members.</Text>
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { cardSelected("education"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
-                    <Text style={[styles.title, { color: 'white' }]}>Govt. and Other Schemes</Text>
-                    <Image source={require('../images/scholarships.jpg')} style={{ height: 200, width: '100%' }} />
-                    <View style={styles.cardRow2}>
-                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>
-                            Please be informed about government and other private organization schemes for Education, Higher Education, Businesses, and Needy people.
+                            We already have {memberCount} active members with us. Please come and join us to help and at the same time get benefits by being part of our community.
                         </Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => { cardSelected("matrimonial"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                <TouchableOpacity onPress={() => { cardSelected("events"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Meetings & Events</Text>
+                    <Image source={require('../images/alerts.png')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Alerts and Notifications for Meetings, Activities, & other Events.</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("requests"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Requests - {beneficiaryCount}</Text>
+                    <Image source={require('../images/requests.png')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>
+                            If you are looking for a help, please reach out to us by posting a request with due details.
+                            Our team would review and let you know the help that we can extend.</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("feesdonations"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Contributions - Rs.{donationAmount}/-</Text>
+                    <Image source={require('../images/donations.jpg')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Your small contributions would bring a big difference to our community members in a need.</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("education"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Education & Other Facilties</Text>
+                    <Image source={require('../images/scholarships.jpg')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>
+                            Please be informed about government and other private organization schemes for Education, Businesses, and People in need.
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("jobs"); }} style={[styles.item, { backgroundColor: '#F9D162' }]}>
+                    <Text style={[styles.title, { color: 'white' }]}>Jobs</Text>
+                    <Image source={require('../images/jobs.jpg')} style={{ height: 200, width: '100%' }} />
+                    <View style={styles.cardRow2}>
+                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Are you looking for a Job? Then this is the right place to get more information.</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { cardSelected("matrimonial"); }} style={[styles.item, { backgroundColor: '#009387' }]}>
                     <Text style={[styles.title, { color: 'white' }]}>Matrimonial</Text>
                     <Image source={require('../images/matrimonial.jpg')} style={{ height: 200, width: '100%' }} />
                     <View style={styles.cardRow2}>
-                        <Text style={[styles.title2, { backgroundColor: '#F9D162', color: 'white' }]}>Let us take our community bonds to the next level.</Text>
+                        <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>Let us take our community bonds to the next level.</Text>
                     </View>
                 </TouchableOpacity>
                 <View style={{ margin: 10, flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -119,6 +204,7 @@ const Intro = ({ navigation }: { navigation: any }) => {
                         onPress={() => { cardSelected("profile"); }}>
                         <Icon name="person" size={30} color="green" />
                     </TouchableOpacity>
+                    <Text style={{ color: 'royalblue', fontSize: 20, fontWeight: 'bold' }}>User# {loggedInUser?.phone}</Text>
                     <TouchableOpacity
                         onPress={() => { logout(); }}>
                         <Icon name="logout" size={30} color="orange" />
@@ -191,7 +277,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     title: {
-        fontSize: 30,
+        fontSize: 28,
+        //fontWeight: 'bold'
     },
     title2: {
         fontSize: 16,
