@@ -88,8 +88,7 @@ const Members = ({ navigation, route }) => {
     <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
       <View>
         <Image
-          //source={require('../images/members/' + { item.phone } + '.jpg')}
-          source={{ uri: '../images/members/' + '9841000121' + '.jpg' }}
+          source={require('../images/members/profile.jpg')}
           style={styles.itemImage}
         />
       </View>
