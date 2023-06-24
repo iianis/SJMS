@@ -7,6 +7,7 @@ import CustomButton from '../components/CustomButton';
 import Loader from '../components/Loader';
 import { dBTable } from '../data/misc';
 import Search from '../components/Search';
+import InternetConnected from '../components/InternetConnected';
 
 const Donations = ({ navigation, route }) => {
   const loggedInUser = route.params.user;
@@ -57,6 +58,7 @@ const Donations = ({ navigation, route }) => {
 
   const handleListSelection = (item) => {
     //console.log("list item selected ", item);
+    if (!loggedInUser || !loggedInUser.accessLevel || loggedInUser.accessLevel <= 1) return;
     navigation.navigate('DonationsNew', { item: item, user: loggedInUser });
   };
 
@@ -73,7 +75,9 @@ const Donations = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Loader visible={loading} /><View>
+      <Loader visible={loading} />
+      <InternetConnected />
+      <View>
         <Search
           PlaceHolder='Search by Details'
           FilterBySearch={(search: string) => { filterBySearch(search) }}

@@ -9,8 +9,9 @@ import Loader from '../components/Loader';
 import Colors from '../data/colorscheme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { talukas, villages } from '../data/geography';
+import InternetConnected from '../components/InternetConnected';
 
-const AlertsNew = ({ navigation, route }) => {
+const EventsNew = ({ navigation, route }) => {
     //const [selectedId, setSelectedId] = useState(1);
     const item = route.params?.item;
     const loggedInUser = route.params?.user;
@@ -25,7 +26,7 @@ const AlertsNew = ({ navigation, route }) => {
     const [villagesByTaluka, setVillagesByTaluka] = useState([]);
     const [timePickerToggle, setTimePickerToggle] = useState(false);
     const [uiDetails, setUIDetails] = useState({
-        dbTable: "events", redirectComponent: 'Alerts'
+        dbTable: "events", redirectComponent: 'Events'
     });
     const [inputs, setInputs] = useState<IEvent>({
         name: '',
@@ -128,7 +129,7 @@ const AlertsNew = ({ navigation, route }) => {
             //console.log('deleting.. Error', error);
             Alert.alert("Error", "Event Update - Something went wrong.");
         } finally {
-            navigation.navigate('Alerts', { filter: null, user: loggedInUser });
+            navigation.navigate('Events', { filter: null, user: loggedInUser });
         }
     };
 
@@ -156,7 +157,7 @@ const AlertsNew = ({ navigation, route }) => {
 
     const handleEventDate = ((dateSelected: any) => {
         if (!dateSelected) return;
-        console.log('eventDateSelected', dateSelected);
+        //console.log('eventDateSelected', dateSelected);
         let eventDateText = dateSelected.toDate().getDate() + '-' + (dateSelected.toDate().getMonth() + 1) + '-' + dateSelected.toDate().getFullYear();
         setSelectedEventDateText(eventDateText);
         let eventTimeText = dateSelected.toDate().getHours() + ':' + dateSelected.toDate().getMinutes();
@@ -170,9 +171,10 @@ const AlertsNew = ({ navigation, route }) => {
     return (
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
+            <InternetConnected />
             <ScrollView contentContainerStyle={{ paddingTop: 50, paddingHorizontal: 20 }}>
-                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Event Details</Text>
-                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter event information.</Text>
+                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Event</Text>
+                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter event details.</Text>
                 <View style={{ marginVertical: 20 }}>
 
                     <CustomDropdownList
@@ -189,6 +191,9 @@ const AlertsNew = ({ navigation, route }) => {
                         data={inputs.description}
                         iconName="description"
                         error={errors.description}
+                        maxLength={200}
+                        multiline={true}
+                        multilines={3}
                         placeholder="Enter description"
                         onFocus={() => { handleError('description', null) }}
                         onChangeText={text => handleInputChange('description', text)}
@@ -238,7 +243,7 @@ const AlertsNew = ({ navigation, route }) => {
     );
 }
 
-export default AlertsNew
+export default EventsNew
 
 const styles = StyleSheet.create({
 

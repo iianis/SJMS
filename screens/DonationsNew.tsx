@@ -10,6 +10,7 @@ import Colors from '../data/colorscheme';
 import { talukas, villages } from '../data/geography';
 
 import firestore from '@react-native-firebase/firestore';
+import InternetConnected from '../components/InternetConnected';
 
 const DonationsNew = ({ navigation, route }) => {
     //const [selectedId, setSelectedId] = useState(1);
@@ -35,7 +36,7 @@ const DonationsNew = ({ navigation, route }) => {
         receiptNumber: '',
         desc: '',
         deleted: false,
-        receivedBy: 'Admin',
+        receivedBy: loggedInUser ? loggedInUser.name : 'Admin',
         receivedOn: new Date().toString(),
         updatedBy: '',
         updatedOn: ''
@@ -102,7 +103,7 @@ const DonationsNew = ({ navigation, route }) => {
     const update = async () => {
         //console.log('updating donation..');
         try {
-            inputs.updatedBy = '';
+            inputs.updatedBy = loggedInUser ? loggedInUser.name : 'Admin';
             inputs.updatedOn = new Date().toString();
             await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
         } catch (error) {
@@ -209,6 +210,7 @@ const DonationsNew = ({ navigation, route }) => {
     return (
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
+            <InternetConnected />
             <ScrollView contentContainerStyle={{ paddingTop: 50, paddingHorizontal: 20 }}>
                 <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Fees & Donation</Text>
                 <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter member details & amount.</Text>

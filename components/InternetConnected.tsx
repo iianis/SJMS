@@ -8,7 +8,7 @@ const InternetConnected = () => {
         //console.log('Connection type 1');
         const unsubscribe = NetInfo.addEventListener(state => {
             //console.log('Connection type', state.type);
-            console.log('is Connected', state.isConnected);
+            //console.log('is Connected', state.isConnected);
             setIsConnected(state.isConnected);
         })
 

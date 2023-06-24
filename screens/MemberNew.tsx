@@ -12,6 +12,8 @@ import { educations, IMember, memberPublicTypes, memberType, relations, works } 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { dBTable } from '../data/misc';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import InternetConnected from '../components/InternetConnected'
+import CustomButtonSwitch from '../components/CustomButtonSwitch'
 
 const MemberNew = ({ navigation, route }) => {
     const item = route.params?.item;
@@ -22,10 +24,10 @@ const MemberNew = ({ navigation, route }) => {
         phone: '',
         password: '1234',
         name: '',
-        taluka: '',
-        talukaId: 0,
-        village: '',
-        villageId: 0,
+        taluka: loggedInUser ? loggedInUser.taluka : 'Satara',
+        talukaId: loggedInUser ? loggedInUser.talukaId : 1,
+        village: loggedInUser ? loggedInUser.village : 'Satara',
+        villageId: loggedInUser ? loggedInUser.villageId : 1,
         district: 'Satara',
         districtId: 1,
         address: '',
@@ -42,14 +44,16 @@ const MemberNew = ({ navigation, route }) => {
         familyMembers: 1,
         familyHeadPhone: '',
         familyHeadName: '',
+        certificateIssued: false,
+        deleted: false,
+        isDirector: false,
+        accessLevel: 1,
         //fees: [],
         //requests: [],
         //invitations: [],
-        certificateIssued: false,
         //donations: [],
-        deleted: false,
     });
-    //console.log("onrefresh: ", inputs);
+    //console.log("onrefresh: ", loggedInUser.accessLevel);
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(true);
     const [dobToggle, setDOBToggle] = useState(false);
@@ -61,7 +65,8 @@ const MemberNew = ({ navigation, route }) => {
     });
 
     useEffect(() => {
-        console.log('loading selected user..', route.params);
+        //console.log('loading selected user..', route.params);
+        if (loggedInUser && loggedInUser.talukaId) handleDefaultSettings("taluka");
         if (item) {
             loadMember();
         } else {
@@ -238,6 +243,16 @@ const MemberNew = ({ navigation, route }) => {
         setSelectedDOBText(dobInText);
     });
 
+    const handleDefaultSettings = (field: string) => {
+        let fieldId = field + 'Id';
+        setInputs(prevState => ({ ...prevState, [field]: loggedInUser.village }));
+        if (field === 'taluka') {
+            let villagesByFilter = villages.filter(item => { return item.taluka == loggedInUser.taluka; });
+            setVillagesByTaluka(villagesByFilter);
+        }
+        setInputs(prevState => ({ ...prevState, [fieldId]: loggedInUser.villageId }));
+    }
+
     const clearFormFields = (member: any) => {
         setInputs({
             phone: '',
@@ -274,9 +289,10 @@ const MemberNew = ({ navigation, route }) => {
     return (
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
+            <InternetConnected />
             <ScrollView contentContainerStyle={{ paddingTop: 50, paddingHorizontal: 20 }}>
-                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Member Details</Text>
-                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Update member information</Text>
+                <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Member Information</Text>
+                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter details of the member.</Text>
                 <View style={{ marginVertical: 20 }}>
 
                     <CustomDropdownList
@@ -368,7 +384,6 @@ const MemberNew = ({ navigation, route }) => {
                         />
                     </View>
                     }
-
                     <CustomTextInput
                         label="Date of Birth"
                         data={selectedDOBText}
@@ -386,6 +401,24 @@ const MemberNew = ({ navigation, route }) => {
                         }}
 
                     /></View>}
+                    {loggedInUser.accessLevel > 3 &&
+                        <CustomButtonSwitch
+                            label="Is Director"
+                            data={inputs.isDirector == true ? 1 : 0}
+                            iconName="approval"
+                            error={errors.isDirector}
+                            onChange={(value: boolean) => { handleInputChange('isDirector', value) }}
+                        />
+                    }
+                    {loggedInUser.accessLevel > 3 &&
+                        <CustomButtonSwitch
+                            label="Is Founder Member"
+                            data={inputs.isFounder == true ? 1 : 0}
+                            iconName="approval"
+                            error={errors.isFounder}
+                            onChange={(value: boolean) => { handleInputChange('isFounder', value) }}
+                        />
+                    }
                     {(itemEditable || loggedInUser.accessLevel > 1) && <CustomButton title="Save" onPress={() => validate()} />}
                 </View>
             </ScrollView>

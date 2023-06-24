@@ -91,6 +91,7 @@ export interface IRequest {
     district: string;
     deleted: boolean;
     approvedDate: string;
+    approvedAmount: number;
     approved?: boolean;
     paid?: boolean;
     createdOn?: string;

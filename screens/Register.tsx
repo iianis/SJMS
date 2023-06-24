@@ -5,11 +5,12 @@ import CustomButton from '../components/CustomButton'
 import Loader from '../components/Loader'
 import firestore from '@react-native-firebase/firestore';
 import { dBTable } from '../data/misc'
+import { IMember } from '../data/members'
 
 const Register = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [inputs, setInputs] = useState({
+  const [inputs, setInputs] = useState<IMember>({
     phone: '',
     password: '',
     confirmPassword: '',
@@ -36,6 +37,8 @@ const Register = ({ navigation, route }) => {
     familyHeadName: '',
     certificateIssued: false,
     deleted: false,
+    isDirector: false,
+    accessLevel: 1,
   });
   const [uiDetails, setUIDetails] = useState({
     dbTable: "members", redirectComponent: 'Members'

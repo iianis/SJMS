@@ -12,6 +12,9 @@ import firestore from '@react-native-firebase/firestore';
 import CustomButton from '../components/CustomButton';
 import Loader from '../components/Loader';
 import { dBTable } from '../data/misc';
+import InternetConnected from '../components/InternetConnected';
+import Colors from '../data/colorscheme';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const Members = ({ navigation, route }) => {
   const { height, width } = Dimensions.get('window');
@@ -46,7 +49,7 @@ const Members = ({ navigation, route }) => {
     await firestore()
       .collection(dBTable(uiDetails.dbTable))
       .orderBy('name')
-      .limit(50)
+      .limit(500)
       .get()
       .then(memberSnapshot => {
         //console.log(' total members: ' + memberSnapshot.size);
@@ -95,7 +98,16 @@ const Members = ({ navigation, route }) => {
       <View>
         <Text style={[styles.title, textColor]}>{item.name}</Text>
         {item.memberType == "Member" && <View style={styles.cardRow2}>
-          <Text style={[styles.title2, textColor]}>{item.memberType}</Text>
+          <Text style={[styles.title2, textColor]}>{item.isDirector ? "Director " : item.isFounder ? "Founder Member " : item.memberType}
+            {item.isDirector && <Icon
+              name="star"
+              style={{ color: Colors.orange, fontSize: 20, marginLeft: 10 }}
+            />}
+            {item.isFounder && <Icon
+              name="star"
+              style={{ color: Colors.white, fontSize: 20, marginLeft: 10 }}
+            />}
+          </Text>
         </View>}
         {item.memberType == "Family" && <View style={styles.cardRow2}>
           <Text style={[styles.title2, textColor]}>{item.relation} of {item.familyHeadName}</Text>
@@ -118,6 +130,8 @@ const Members = ({ navigation, route }) => {
       <Item
         item={item}
         onPress={() => {
+          if (!loggedInUser || !loggedInUser.accessLevel || (loggedInUser.accessLevel <= 1 && item.phone != loggedInUser.phone)) return;
+          //if (!loggedInUser || !loggedInUser.accessLevel || loggedInUser.accessLevel <= 1) return;
           setSelectedId(item.id);
           navigation.navigate('MemberNew', { item: item, user: loggedInUser });
         }}
@@ -142,6 +156,7 @@ const Members = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <Loader visible={loading} />
+      <InternetConnected />
       <View style={styles.containerChild1}>
         <Search PlaceHolder='Search by Name, Taluka, Phone' FilterBySearch={(search: string) => { filterBySearch(search) }} />
       </View>

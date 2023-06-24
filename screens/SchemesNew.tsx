@@ -7,6 +7,7 @@ import CustomButton from '../components/CustomButton';
 import Loader from '../components/Loader';
 import Colors from '../data/colorscheme';
 import { IScheme } from './Schemes';
+import InternetConnected from '../components/InternetConnected';
 
 const SchemesNew = ({ navigation, route }) => {
     const item = route.params?.item;
@@ -123,6 +124,7 @@ const SchemesNew = ({ navigation, route }) => {
     return (
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
+            <InternetConnected />
             <ScrollView contentContainerStyle={{ paddingTop: 50, paddingHorizontal: 20 }}>
                 <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Scholarships & Schemes</Text>
                 <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter details.</Text>

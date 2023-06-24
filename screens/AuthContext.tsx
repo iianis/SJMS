@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }: any) => {
     const [isLoading, setIsLoading] = useState(false);
     const [userToken, setUserToken] = useState(null);
     const [userDetails, setUserDetails] = useState({
-        name: '', phone: '', accessLevel: 1,
+        name: '', phone: '', accessLevel: 1, isDirector: false,
         taluka: 'Satara', talukaId: 1, village: 'Satara', villageId: 1, securityToken: ""
     });
     const [uiDetails, setUIDetails] = useState({
@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: any) => {
                         response = "success";
                         await AsyncStorage.multiSet([['userToken', "thisisahighlysecurejwtoken"], ['phone', phone]]);
                         let user = {
+                            id: item.id,
                             name: itemDoc.name,
                             phone: itemDoc.phone,
                             accessLevel: itemDoc.accessLevel ? itemDoc.accessLevel : 1,

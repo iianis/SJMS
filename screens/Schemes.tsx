@@ -13,6 +13,7 @@ import Loader from '../components/Loader';
 import Search from '../components/Search';
 import firestore from '@react-native-firebase/firestore';
 import { dBTable } from '../data/misc';
+import InternetConnected from '../components/InternetConnected';
 
 const Schemes = ({ navigation, route }) => {
   const loggedInUser = route.params.user;
@@ -83,6 +84,7 @@ const Schemes = ({ navigation, route }) => {
         />
       </View>
       <Loader visible={loading} />
+      <InternetConnected />
       {loggedInUser.accessLevel > 1 && <CustomButton title="Add New" onPress={() => navigation.navigate('SchemesNew', { item: null, user: loggedInUser })} />}
       <CustomFlatList data={searchResult} selectedId={selectedId} onSelect={(item: IScheme) => { handleListSelection(item); }} />
     </View>

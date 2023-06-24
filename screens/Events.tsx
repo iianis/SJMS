@@ -7,15 +7,16 @@ import Search from '../components/Search';
 import firestore from '@react-native-firebase/firestore';
 import CustomFlatList from '../components/CustomFlatList';
 import { dBTable } from '../data/misc';
+import InternetConnected from '../components/InternetConnected';
 
-const Alerts = ({ navigation, route }) => {
+const Events = ({ navigation, route }) => {
   const loggedInUser = route.params.user;
   const [selectedId, setSelectedId] = useState(null);
   const [searchResult, setSearchResult] = useState([]);
   const [itemsData, setItemsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uiDetails, setUIDetails] = useState({
-    dbTable: "events", redirectComponent: 'AlertsNew'
+    dbTable: "events", redirectComponent: 'EventsNew'
   });
 
   useEffect(() => {
@@ -72,6 +73,7 @@ const Alerts = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <Loader visible={loading} />
+      <InternetConnected />
       <View>
         <Search
           PlaceHolder='Search by Details'
@@ -84,7 +86,7 @@ const Alerts = ({ navigation, route }) => {
   );
 };
 
-export default Alerts;
+export default Events;
 
 const styles = StyleSheet.create({
   container: {

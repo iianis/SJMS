@@ -1,11 +1,11 @@
-import React, {useState} from 'react';
-import {StyleSheet, View, FlatList, TouchableOpacity, Text} from 'react-native';
-import {taluka, talukas} from '../data/members';
+import React, { useState } from 'react';
+import { StyleSheet, View, FlatList, TouchableOpacity, Text } from 'react-native';
+import { taluka, talukas } from '../data/members';
 
-const Districts = ({navigation}) => {
+const Districts = ({ navigation }) => {
   const [selectedId, setSelectedId] = useState(null);
 
-  const Item = ({item, onPress, backgroundColor, textColor}) => (
+  const Item = ({ item, onPress, backgroundColor, textColor }) => (
     <TouchableOpacity onPress={onPress} style={[styles.item, backgroundColor]}>
       <View>
         <Text style={[styles.title, textColor]}>{item.name}</Text>
@@ -21,7 +21,7 @@ const Districts = ({navigation}) => {
     </TouchableOpacity>
   );
 
-  const renderItem = ({item}) => {
+  const renderItem = ({ item }) => {
     const backgroundColor = item.id === selectedId ? '#F9D162' : '#009387';
     const color = item.id === selectedId ? 'white' : 'black';
 
@@ -30,10 +30,10 @@ const Districts = ({navigation}) => {
         item={item}
         onPress={() => {
           setSelectedId(item.id);
-          navigation.navigate('ServiceAreas', {item: item});
+          navigation.navigate('Intro', { item: item });
         }}
-        backgroundColor={{backgroundColor}}
-        textColor={{color}}
+        backgroundColor={{ backgroundColor }}
+        textColor={{ color }}
       />
     );
   };

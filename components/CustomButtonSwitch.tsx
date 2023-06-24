@@ -9,8 +9,8 @@ const CustomButtonSwitch = ({ label, data, iconName, error, onChange = () => { }
     const [isFocused, setIsFocused] = useState(false);
     //console.log('CustomButtonSwitch approved', data);
     const switchOptions = [
-        { label: "In progress", value: 0 },
-        { label: "Approved", value: 1 },
+        { label: "No", value: 0 },
+        { label: "Yes", value: 1 },
     ];
     return (
         <View style={{ marginBottom: 10 }}>

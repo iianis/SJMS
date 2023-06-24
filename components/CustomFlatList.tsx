@@ -3,6 +3,9 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 
 const CustomFlatList = ({ data, selectedId, onSelect }) => {
 
+    const dateFormat = { year: "numeric", month: "numeric", day: "numeric", };
+    const dateTimeFormat = { year: "numeric", month: "numeric", day: "numeric", hour: '2-digit', minute: '2-digit' };
+
     const Item = ({ item, onPress, backgroundColor, textColor }) => (
         <TouchableOpacity onPress={onPress} style={[styles.cardRow, backgroundColor]}>
             {
@@ -27,7 +30,7 @@ const CustomFlatList = ({ data, selectedId, onSelect }) => {
             }
             {
                 item.description && <View style={styles.cardRow2}>
-                    <Text style={[styles.title2, textColor]}>Description: {item.description}</Text>
+                    <Text style={[styles.title2, textColor]}>{item.description}</Text>
                 </View>
             }
             {
@@ -47,17 +50,21 @@ const CustomFlatList = ({ data, selectedId, onSelect }) => {
             }
             {
                 item.requestType && item.approved == false && <View style={styles.cardRow2}>
-                    <Text style={[styles.title2, textColor]}>Status: {item.approved ? 'Yes' : 'In progress'}</Text>
+                    <Text style={[styles.title2, textColor]}>Status: 'In progress'</Text>
                 </View>
             }
             {
                 item.requestType && item.approved && item.approvedDate && <View style={styles.cardRow2}>
-                    <Text style={[styles.title2, textColor]}>Approved Date: {new Date(item.approvedDate.toString()).toLocaleString()}</Text>
+                    <Text style={[styles.title2, textColor]}>
+                        Approved Date: {new Date(item.approvedDate.toString()).toLocaleString("en", dateFormat)}, Amount: {item.approvedAmount}
+                    </Text>
                 </View>
             }
             {
                 item.receiptNumber && <View style={styles.cardRow2}>
-                    <Text style={[styles.title2, textColor]}>Receipt#: {item.receiptNumber == '' ? 'In progress' : item.receiptNumber}, Amount: {item.amount}</Text>
+                    <Text style={[styles.title2, textColor]}>
+                        Receipt#: {item.receiptNumber == '' ? 'In progress' : item.receiptNumber}, Amount: {item.amount}
+                    </Text>
                 </View>
             }
             {

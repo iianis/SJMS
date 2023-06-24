@@ -1,16 +1,23 @@
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-} from 'react-native';
-import React, { useEffect, useState, useContext } from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { View, Text, StyleSheet, Keyboard, Alert, TouchableOpacity, Image, PermissionsAndroid } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { ScrollView } from 'react-native-gesture-handler';
+import CustomTextInput from '../components/CustomTextInput';
+import CustomButton from '../components/CustomButton';
+import Loader from '../components/Loader';
+import CustomDropdownList from '../components/CustomDropdownList';
+import { talukas, villages } from '../data/geography';
 import firestore from '@react-native-firebase/firestore';
-import { AuthContext } from './AuthContext'
+import { educations, IMember, memberPublicTypes, memberType, relations, works } from '../data/members';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { dBTable } from '../data/misc';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import InternetConnected from '../components/InternetConnected';
+import CustomButtonSwitch from '../components/CustomButtonSwitch';
+import { AuthContext } from './AuthContext';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+//import exampleImage from '../images/members/profile.jpg';
 
 export const ProfileIcon = () => {
   return (
@@ -42,97 +49,308 @@ export const TableRow = ({ item }) => {
 };
 
 const Profile = ({ navigation, route }) => {
-  const phone = route.params.item;
+  const item = route.params?.item;
+  const loggedInUser = route.params?.user;
   const { logout } = useContext(AuthContext);
   const [documentId, setDocumentId] = useState('');
-  const [memberData, setMemberData] = useState({
+  const [villagesByTaluka, setVillagesByTaluka] = useState([]);
+  const [inputs, setInputs] = useState<IMember>({
+    phone: '',
+    password: '1234',
     name: '',
+    taluka: loggedInUser ? loggedInUser.taluka : 'Satara',
+    talukaId: loggedInUser ? loggedInUser.talukaId : 1,
+    village: loggedInUser ? loggedInUser.village : 'Satara',
+    villageId: loggedInUser ? loggedInUser.villageId : 1,
+    district: 'Satara',
+    districtId: 1,
     address: '',
-    phone,
-    taluka: '',
+    pin: '',
     dob: '',
-    village: '',
-    occupation: 'Business',
-    education: 'Graduate',
+    work: 'Other',
+    workId: 99,
+    education: 'Other',
+    educationId: 99,
     memberType: 'Member',
-    familyMembers: '2',
-    fees: '0',
-    requests: '',
-    invitaions: '',
-    certificate: '',
-    donations: '0',
-    active: true,
+    memberTypeId: 8,
+    relation: 'Self',
+    relationId: 1,
+    familyMembers: 1,
+    familyHeadPhone: '',
+    familyHeadName: '',
+    certificateIssued: false,
+    deleted: false,
+    isDirector: false,
+    accessLevel: 1,
+    //fees: [],
+    //requests: [],
+    //invitations: [],
+    //donations: [],
+  });
+  //console.log("onrefresh: ", loggedInUser.accessLevel);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [dobToggle, setDOBToggle] = useState(false);
+  const [itemEditable, setItemEditable] = useState(false);
+  const [selectedDOB, setSelectedDOB] = useState(new Date());
+  const [selectedDOBText, setSelectedDOBText] = useState("");
+  const [uiDetails, setUIDetails] = useState({
+    dbTable: "members", redirectComponent: 'Members'
   });
 
   useEffect(() => {
     //console.log('UseEffect ..');
-    getMember();
+    loadMember();
   }, []);
 
-  const getMember = async () => {
-    //let memberDocument = await firestore().collection('members').doc('1').get();
-    /*firestore()
-      .collection('members')
-      .where('phone', '==', phone)
-      .onSnapshot(member => {
-        //console.log(member._docs[0]._data);
-        setMemberData({
-          name: member._docs[0]._data.name,
-          address: member._docs[0]._data.address,
-          phone: member._docs[0]._data.phone,
-          taluka: member._docs[0]._data.taluka,
-          dob: member._docs[0]._data.dob,
-          village: member._docs[0]._data.village,
-          occupation: member._docs[0]._data.occupation,
-          education: member._docs[0]._data.education,
-          memberType: member._docs[0]._data.memberType,
-          familyMembers: member._docs[0]._data.familyMembers,
-          fees: member._docs[0]._data.fees,
-          requests: member._docs[0]._data.requests,
-          invitaions: member._docs[0]._data.invitaions,
-          certificate: member._docs[0]._data.certificate,
-          donations: member._docs[0]._data.donations,
-          active: member._docs[0]._data.active,
-        });
-      });*/
+  const validate = () => {
+    Keyboard.dismiss();
+    //console.log('validation..', inputs);
+    let valid = true;
 
-    /*firestore()
-      .collection('members')
-      .where('phone', '==', phone)
-      .onSnapshot(members => {
-        console.log(' total records: ' + members.size);
-        members.forEach(doc => {
-          console.log(' record data: ' , doc.data());
-        });
-      });*/
+    if (!inputs.name) {
+      handleError('name', 'Please enter Name');
+      valid = false;
+    }
+    if (!inputs.phone) {
+      handleError('phone', 'Please enter Phone');
+      valid = false;
+    }
+    if (inputs.taluka == '') {
+      handleError('taluka', 'Please select Taluka');
+      valid = false;
+    }
+    if (inputs.village == '') {
+      handleError('village', 'Please select Village');
+      valid = false;
+    }
+    if (inputs.work == '') {
+      handleError('work', 'Please select Work');
+      valid = false;
+    }
 
+    if (valid) {
+      if (documentId) update(); else save();
+    }
+  }
+  const save = () => {
+    setLoading(true);
+    //console.log('adding..');
+    setTimeout(async () => {
+      setLoading(false);
+      try {
+        //AsyncStorage.setItem('user', JSON.stringify(inputs));
+        await firestore()
+          .collection(dBTable(uiDetails.dbTable))
+          .add(inputs)
+          .then(res => {
+            //console.log(res);
+          });
+      } catch (error) {
+        Alert.alert("Error", "Member Save - Something went wrong.");
+      } finally {
+        navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
+      }
+    }, 3000)
+  }
+  const update = async () => {
+    //console.log('updating..');
+    try {
+      await firestore().collection(dBTable(uiDetails.dbTable)).doc(documentId).set(inputs);
+    } catch (error) {
+      Alert.alert("Error", "Member Update - Something went wrong.");
+    } finally {
+      navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
+    }
+  };
+
+  const loadMember = async () => {
+    setLoading(true);
+    console.log('loadMember > 1', loggedInUser.phone);
     await firestore()
-      .collection('members')
-      .where('phone', '==', phone)
+      .collection(dBTable(uiDetails.dbTable))
+      .where('phone', '==', loggedInUser.phone)
+      //.doc(loggedInUser.id)
       .get()
       .then(memberSnapshot => {
-        //console.log(' total records: ' + memberSnapshot.size);
-        memberSnapshot.forEach(doc => {
-          //console.log(' record data: ', doc.data());
-          if (doc.exists) {
-            setMemberData(doc.data());
-            setDocumentId(doc.id);
-          } else {
-            //console.log(Math.random().toString(36).toString(7));
-            setDocumentId(Math.random().toString(36).toString(7));
+        memberSnapshot.forEach(item => {
+          let data = item.data();
+          loadMemberDetails(data, memberSnapshot.id);
+          if (data.phone == loggedInUser.phone || data.familyPhone == loggedInUser.phone) {
+            setItemEditable(true);
+            console.log('User can Edit this record');
           }
         });
+        //console.log('loadMember > 1', memberSnapshot, memberSnapshot.exists);
+        if (memberSnapshot.exists) {
+          let data = memberSnapshot.data();
+          loadMemberDetails(data, item.id);
+          if (data.phone == loggedInUser.phone || data.familyPhone == loggedInUser.phone) {
+            setItemEditable(true);
+            console.log('User can Edit this record');
+          }
+        } else {
+          console.log("No matching member found! documentId: ", documentId);
+          setDocumentId('');
+        }
+        setLoading(false);
       });
   };
 
-  const updateMember = async () => {
-    await firestore().collection('members').doc(documentId).set(memberData);
+  const loadMemberDetails = (data, memberId, isFamilyPhone = false) => {
+    if (!isFamilyPhone) {
+      setInputs(data);
+      if (data.dob) handleDOBSet(data.dob.toDate());
+      if (data.dob) setSelectedDOB(data.dob.toDate());
+      setDocumentId(memberId);
+    } else {
+      setInputs(prevState => ({ ...prevState, ['taluka']: data.taluka }));
+      setInputs(prevState => ({ ...prevState, ['talukaId']: data.talukaId }));
+      setInputs(prevState => ({ ...prevState, ['village']: data.village }));
+      setInputs(prevState => ({ ...prevState, ['villageId']: data.villageId }));
+      setInputs(prevState => ({ ...prevState, ['familyHeadName']: data.name }));
+    }
+    handleDDLChange("taluka", { id: data.talukaId, name: data.taluka });
+  };
+
+  const loadMemberByPhone = async (phone: string, familyPhone: boolean = false) => {
+    setLoading(true);
+    //console.log('getMember > by phone: ', phone);
+    await firestore()
+      .collection(dBTable(uiDetails.dbTable))
+      .where('phone', '==', phone)
+      .get()
+      .then(memberSnapshot => {
+        memberSnapshot.forEach(item => {
+          Alert.alert(familyPhone ? "Head of Family!" : "Registered Member!", item.data().name + ", " + item.data().village + ", Phone - " + item.data().phone,
+            [
+              {
+                text: 'Ok', onPress: () => {
+                  console.log('Go ahead and load this Member Information');
+                  let data = item.data();
+                  loadMemberDetails(data, item.id, familyPhone);
+                }
+              },
+              { text: 'Cancel', onPress: () => console.log('Cancel and try different Phone Number') },
+            ],
+            {
+              cancelable: false
+            });
+        })
+        setLoading(false);
+      });
+  };
+
+  const handleInputChange = (field: string, item: any) => {
+    setInputs(prevState => ({ ...prevState, [field]: item }));
+
+    if ((field === 'phone' || field == 'familyHeadPhone') && item.toString().length == 10) {
+      loadMemberByPhone(item, field == 'familyHeadPhone'); //name == 'Student' ? name : 'Business'
+    }
+  }
+
+  const handleDDLChange = (field: string, changedItem: any) => {
+    let fieldId = field + 'Id';
+    setInputs(prevState => ({ ...prevState, [field]: changedItem.name }));
+    setInputs(prevState => ({ ...prevState, [fieldId]: changedItem.id }));
+    if (field === 'taluka') {
+      let villagesByFilter = villages.filter(item => { return item.taluka == changedItem.name; });
+      setVillagesByTaluka(villagesByFilter);
+    }
+    if (field === 'memberType') {
+      clearFormFields(changedItem);
+    }
+    //setInputs(prevState => ({ ...prevState, [fieldId]: item.id }));
+  }
+
+  const handleError = (field: string, errorMessage: string) => {
+    setErrors(prevState => ({ ...prevState, [field]: errorMessage }))
+  }
+
+  const handleDOBChange = ((event, dobSelected) => {
+    const dobDate = dobSelected || selectedDOB;
+    setInputs(prevState => ({ ...prevState, ["dob"]: dobDate }));
+    setSelectedDOB(dobDate);
+    let dobInText = dobDate.getDate() + '-' + (dobDate.getMonth() + 1) + '-' + dobDate.getFullYear();
+    setSelectedDOBText(dobInText);
+  });
+
+  const handleDOBSet = ((dobSelected: string) => {
+    let dobInText = dobSelected.getDate() + '-' + (dobSelected.getMonth() + 1) + '-' + dobSelected.getFullYear();
+    setSelectedDOBText(dobInText);
+  });
+
+  const handleDefaultSettings = (field: string) => {
+    let fieldId = field + 'Id';
+    setInputs(prevState => ({ ...prevState, [field]: loggedInUser.village }));
+    if (field === 'taluka') {
+      let villagesByFilter = villages.filter(item => { return item.taluka == loggedInUser.taluka; });
+      setVillagesByTaluka(villagesByFilter);
+    }
+    setInputs(prevState => ({ ...prevState, [fieldId]: loggedInUser.villageId }));
+  }
+
+  const clearFormFields = (member: any) => {
+    setInputs({
+      phone: '',
+      password: '1234',
+      name: '',
+      taluka: loggedInUser ? loggedInUser.taluka : 'Satara',
+      talukaId: loggedInUser ? loggedInUser.talukaId : 1,
+      village: loggedInUser ? loggedInUser.village : 'Satara',
+      villageId: loggedInUser ? loggedInUser.villageId : 1,
+      district: 'Satara',
+      districtId: 1,
+      address: '',
+      pin: '',
+      dob: '',
+      work: 'Other',
+      workId: 99,
+      education: 'Other',
+      educationId: 99,
+      memberType: 'Member',
+      memberTypeId: 8,
+      relation: 'Self',
+      relationId: 1,
+      familyMembers: 1,
+      familyHeadPhone: '',
+      familyHeadName: '',
+      certificateIssued: false,
+      deleted: false,
+      isDirector: false,
+      accessLevel: 1,
+    });
+    setSelectedDOBText('');
+  };
+
+  const [cameraPhoto, setCameraPhoto] = useState();
+  const opencamera = async () => {
+    //console.log('camera 1');
+    const permission = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.CAMERA
+    );
+    //console.log('camera 2');
+    if (permission == PermissionsAndroid.RESULTS.GRANTED) {
+      //console.log('camera 3');
+      const result = await launchCamera({ saveToPhotos: true, mediaType: 'photo' });
+      if (result.assets[0] && result.assets[0].uri)
+        setCameraPhoto(result.assets[0].uri);
+
+    }
+  };
+
+  const [galleryPhoto, setGalleryPhoto] = useState();
+  const opengallery = async () => {
+    const result = await launchImageLibrary({ mediaType: 'mixed' });
+    if (result.assets[0] && result.assets[0].uri) setGalleryPhoto(result.assets[0].uri);
   };
 
   return (
     <View style={styles.container}>
+      <InternetConnected />
+      <Loader visible={loading} />
       <TouchableOpacity
-        onPress={() => { navigation.navigate('Intro'); logout(); }}
+        onPress={() => { logout(); }}
         style={{
           position: 'absolute',
           right: 5,
@@ -143,7 +361,7 @@ const Profile = ({ navigation, route }) => {
         <Icon name="logout" size={30} color="white" />
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={updateMember}
+        //onPress={updateMember}
         style={{
           position: 'absolute',
           left: 5,
@@ -153,138 +371,149 @@ const Profile = ({ navigation, route }) => {
         }}>
         <Icon name="save" size={30} color="white" />
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ServiceAreas')}
-        style={{
-          position: 'absolute',
-          right: 5,
-          top: 70,
-          flex: 1,
-          zIndex: 1,
-        }}>
-        <Icon name="featured-play-list" size={30} color="#F9D162" />
-      </TouchableOpacity>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('ServiceAreas')}>
+        <TouchableOpacity onPress={() => opencamera()}>
+          {!cameraPhoto && <Image
+            source={require('../images/members/profile.jpg') || { uri: cameraPhoto || galleryPhoto }}
+            style={styles.photo}
+          />}
           <Image
-            source={require('../images/members/profile.jpg')}
+            source={{ uri: cameraPhoto || galleryPhoto }}
             style={styles.photo}
           />
         </TouchableOpacity>
       </View>
       <View style={styles.footer}>
-        <ScrollView>
-          <Text style={styles.textFooter}>Name</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="Enter members name"
-              style={styles.textInput}
-              value={memberData.name}
-              onChangeText={val => {
-                setMemberData({ ...memberData, name: val });
+        <Loader visible={loading} />
+        <InternetConnected />
+        <ScrollView contentContainerStyle={{ paddingTop: 10, paddingHorizontal: 20 }}>
+          <View style={{ marginVertical: 20 }}>
+            <CustomDropdownList
+              data={memberPublicTypes}
+              label="Member Type"
+              error={errors.memberType}
+              selectedId={inputs.memberTypeId || 8}
+              onChange={item => {
+                handleDDLChange('memberType', item)
               }}
             />
-          </View>
+            {inputs.memberType == 'Family' && <View>
+              <CustomTextInput
+                label="Family Phone"
+                data={inputs.familyHeadPhone}
+                iconName="phone"
+                error={errors.familyHeadPhone}
+                placeholder="Enter family phone"
+                keyboardType='numeric'
+                onFocus={() => { handleError('familyHeadPhone', null) }}
+                onChangeText={text => handleInputChange('familyHeadPhone', text)}
+              />
+              <CustomDropdownList
+                data={relations}
+                label="Relation"
+                error={errors.relation}
+                selectedId={inputs.relationId || 1}
+                onChange={item => {
+                  handleDDLChange('relation', item)
+                }}
+              />
+            </View>}
+            <CustomTextInput
+              label="Member Phone"
+              data={inputs.phone}
+              iconName="phone"
+              error={errors.phone}
+              placeholder="Enter members phone"
+              keyboardType='numeric'
+              onFocus={() => { handleError('phone', null) }}
+              onChangeText={text => handleInputChange('phone', text)}
+            />
+            <CustomTextInput
+              label="Name"
+              data={inputs.name}
+              iconName="person"
+              error={errors.name}
+              placeholder="Enter name"
+              onFocus={() => { handleError('name', null) }}
+              onChangeText={text => handleInputChange('name', text)}
+            />
+            <CustomDropdownList
+              data={talukas}
+              label="Taluka"
+              error={errors.taluka}
+              selectedId={inputs.talukaId}
+              onChange={item => {
+                handleDDLChange('taluka', item)
+              }}
+            />
+            <CustomDropdownList
+              data={villagesByTaluka}
+              label="Village"
+              error={errors.village}
+              selectedId={inputs.villageId}
+              onChange={item => {
+                handleDDLChange('village', item)
+              }}
+            />
+            <CustomDropdownList
+              data={educations}
+              label="Education"
+              error={errors.education}
+              selectedId={inputs.educationId || 1}
+              onChange={(item: any) => {
+                handleDDLChange('education', item);
+                //handleDDLChange('work', item);
+              }}
+            />
+            {inputs.education != 'Student' && <View>
+              <CustomDropdownList
+                data={works}
+                label="Work"
+                error={errors.work}
+                selectedId={inputs.workId || 1}
+                onChange={item => {
+                  handleDDLChange('work', item)
+                }}
+              />
+            </View>
+            }
+            <CustomTextInput
+              label="Date of Birth"
+              data={selectedDOBText}
+              iconName="calendar-today"
+              error={errors.dob}
+              placeholder="dd/mm/yyyy"
+              onFocus={() => { handleError('dob', null); setDOBToggle(true); }}
+            />{dobToggle && <View><DateTimePicker
+              value={selectedDOB}
+              mode="date"
+              display="default"
+              onChange={(event, data) => {
+                setDOBToggle(false);
+                handleDOBChange(event, data);
+              }}
 
-          <Text style={styles.textFooter}>Mobile #</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="Enter your mobile number"
-              style={styles.textInput}
-              value={phone}
-              onChangeText={val => {
-                setMemberData({ ...memberData, phone: val });
-              }}
-            />
-            {memberData == null ? (
-              <Text style={styles.textInvalid}>Invalid Input</Text>
-            ) : null}
+            /></View>}
+            {loggedInUser.accessLevel > 3 &&
+              <CustomButtonSwitch
+                label="Is Director"
+                data={inputs.isDirector == true ? 1 : 0}
+                iconName="approval"
+                error={errors.isDirector}
+                onChange={(value: boolean) => { handleInputChange('isDirector', value) }}
+              />
+            }
+            {loggedInUser.accessLevel > 3 &&
+              <CustomButtonSwitch
+                label="Is Founder Member"
+                data={inputs.isFounder == true ? 1 : 0}
+                iconName="approval"
+                error={errors.isFounder}
+                onChange={(value: boolean) => { handleInputChange('isFounder', value) }}
+              />
+            }
+            {(itemEditable || loggedInUser.accessLevel > 1) && <CustomButton title="Save" onPress={() => validate()} />}
           </View>
-
-          <Text style={styles.textFooter}>Village</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="Select Village"
-              style={styles.textInput}
-              value={memberData.village}
-              onChangeText={val => {
-                setMemberData({ ...memberData, village: val });
-              }}
-            />
-          </View>
-
-          <Text style={styles.textFooter}>Taluka</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="Select Taluka"
-              style={styles.textInput}
-              value={memberData.taluka}
-              onChangeText={val => {
-                setMemberData({ ...memberData, taluka: val });
-              }}
-            />
-          </View>
-          <Text style={styles.textFooter}>Education</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="Enter your Education"
-              style={styles.textInput}
-              value={memberData.education ? memberData.education : 'Graduate'}
-              onChangeText={val => {
-                setMemberData({ ...memberData, education: val });
-              }}
-            />
-          </View>
-          <Text style={styles.textFooter}>Occupation</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="Enter your Occupation"
-              style={styles.textInput}
-              value={
-                memberData.occupation ? memberData.occupation : 'Fabrication'
-              }
-              onChangeText={val => {
-                setMemberData({ ...memberData, occupation: val });
-              }}
-            />
-          </View>
-          <Text style={styles.textFooter}>DOB</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="MM/YYYY"
-              style={styles.textInput}
-              value={memberData.dob}
-              onChangeText={val => {
-                setMemberData({ ...memberData, dob: val });
-              }}
-            />
-          </View>
-
-          <Text style={styles.textFooter}>Member</Text>
-          <View style={styles.action}>
-            <TextInput
-              placeholder="Select member type"
-              style={styles.textInput}
-              value={memberData.memberType}
-              onChangeText={val => {
-                setMemberData({ ...memberData, memberType: val });
-              }}
-            />
-          </View>
-
-          <Text style={styles.textInfo}>
-            Family Members:{' '}
-            {memberData.familyMembers ? memberData.familyMembers : 2}
-          </Text>
-          <Text style={styles.textInfo}>
-            Fees Received: Rs. {memberData.fees ? memberData.fees : 0}
-          </Text>
-          <Text style={styles.textInfo}>
-            Fees Received: Rs. {memberData.donations ? memberData.donations : 0}
-          </Text>
-          <Text style={styles.textInfo}>
-            Cast Cetificate Issued on 01/01/2024
-          </Text>
         </ScrollView>
       </View>
     </View>
@@ -307,16 +536,17 @@ const styles = StyleSheet.create({
     flex: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingVertical: 5,
+    top: 75,
   },
   footer: {
     flex: 4,
     backgroundColor: '#fff',
     borderTopRightRadius: 30,
     borderTopLeftRadius: 30,
-    paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   button: {
     marginTop: 10,

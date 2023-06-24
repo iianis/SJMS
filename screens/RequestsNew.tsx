@@ -11,6 +11,7 @@ import { talukas, villages } from '../data/geography';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import SwitchSelector from "react-native-switch-selector";
 import CustomButtonSwitch from '../components/CustomButtonSwitch';
+import InternetConnected from '../components/InternetConnected';
 
 const RequestsNew = ({ navigation, route }) => {
     //const [selectedId, setSelectedId] = useState(1);
@@ -20,7 +21,6 @@ const RequestsNew = ({ navigation, route }) => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [datePickerToggle, setDatePickerToggle] = useState(false);
-    const [dateTimePickerMode, setDateTimePickerMode] = useState("date");
     const [selectedApprovedDate, setSelectedApprovedDate] = useState(new Date());
     const [selectedApprovedDateText, setSelectedApprovedDateText] = useState("");
     const [villagesByTaluka, setVillagesByTaluka] = useState([]);
@@ -41,6 +41,7 @@ const RequestsNew = ({ navigation, route }) => {
         district: 'Satara',
         deleted: false,
         approvedDate: '',
+        approvedAmount: 0,
         approved: false,
         paid: false,
         createdOn: new Date().toString(),
@@ -76,6 +77,10 @@ const RequestsNew = ({ navigation, route }) => {
             handleError('amount', 'Please enter amount');
             valid = false;
         }
+        if (inputs.approved == true && !inputs.approvedAmount) {
+            handleError('approvedAmount', 'Please enter approved amount');
+            valid = false;
+        }
         if (!inputs.name) {
             handleError('name', 'Please enter name');
             valid = false;
@@ -106,7 +111,7 @@ const RequestsNew = ({ navigation, route }) => {
                     });
             } catch (error) {
                 Alert.alert("Error", "Request Save - Something went wrong.");
-                console.log(error);
+                console.log("Request Save - Something went wrong: " + error);
             } finally {
                 navigation.navigate(uiDetails.redirectComponent, { filter: null, user: loggedInUser });
             }
@@ -114,7 +119,7 @@ const RequestsNew = ({ navigation, route }) => {
     };
 
     const update = async () => {
-        console.log('updating record..');
+        console.log('updating record..', inputs.approvedDate);
         try {
             inputs.updatedBy = '';
             inputs.updatedOn = new Date().toString();
@@ -203,14 +208,14 @@ const RequestsNew = ({ navigation, route }) => {
     };
 
     const handleApprovedDateChange = ((event, dateSelected) => {
-        //console.log('inputs date 1 dateSelected', dateSelected);
-        //console.log('inputs date 11 selectedApprovedDate', selectedApprovedDate);
+        //console.log('1 dateSelected', dateSelected);
+        //console.log('2 selectedApprovedDate', selectedApprovedDate);
         const approvedDate = dateSelected || selectedApprovedDate;
-        setInputs(prevState => ({ ...prevState, ["approvedDate"]: approvedDate }));
-        //console.log('inputs date 2', inputs.approvedDate, approvedDate);
+        setInputs(prevState => ({ ...prevState, ["approvedDate"]: approvedDate + "" }));
+        console.log('3 approvedDate ', approvedDate);
         setSelectedApprovedDate(approvedDate);
         let approvedDateText = approvedDate.getDate() + '-' + (approvedDate.getMonth() + 1) + '-' + approvedDate.getFullYear();
-        //console.log('inputs date 21 approvedDateText', approvedDateText);
+        console.log('4 approvedDateText', approvedDateText);
         setSelectedApprovedDateText(approvedDateText);
     });
 
@@ -230,9 +235,10 @@ const RequestsNew = ({ navigation, route }) => {
     return (
         <View style={{ backgroundColor: Colors.white, flex: 1 }}>
             <Loader visible={loading} />
+            <InternetConnected />
             <ScrollView contentContainerStyle={{ paddingTop: 50, paddingHorizontal: 20 }}>
                 <Text style={{ color: Colors.black, fontSize: 40, fontWeight: 'bold' }}>Requests</Text>
-                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter requests details.</Text>
+                <Text style={{ color: Colors.grey, fontSize: 18, marginVertical: 10 }}>Enter details about your request.</Text>
                 <View style={{ marginVertical: 20 }}>
 
                     <CustomDropdownList
@@ -260,6 +266,9 @@ const RequestsNew = ({ navigation, route }) => {
                         iconName="person"
                         error={errors.description}
                         placeholder="Enter description"
+                        maxLength={200}
+                        multiline={true}
+                        multilines={3}
                         onFocus={() => { handleError('description', null) }}
                         onChangeText={text => handleInputChange('description', text)}
                     />
@@ -302,7 +311,7 @@ const RequestsNew = ({ navigation, route }) => {
                     />
                     {documentId && loggedInUser.accessLevel > 2 &&
                         <CustomButtonSwitch
-                            label="Aproval Status"
+                            label="Is Approved"
                             data={inputs.approved == true ? 1 : 0}
                             iconName="approval"
                             error={errors.approved}
@@ -310,6 +319,17 @@ const RequestsNew = ({ navigation, route }) => {
 
                         />
                     }
+                    {documentId && inputs.approved == true &&
+                        <CustomTextInput
+                            label="Amount"
+                            data={inputs.approvedAmount}
+                            iconName="person"
+                            error={errors.approvedAmount}
+                            placeholder="Enter Approved Amount"
+                            keyboardType='numeric'
+                            onFocus={() => { handleError('approvedAmount', null) }}
+                            onChangeText={text => handleInputChange('approvedAmount', text)}
+                        />}
                     {documentId && inputs.approved == true &&
                         <CustomTextInput
                             label="Approved Date"
@@ -323,7 +343,7 @@ const RequestsNew = ({ navigation, route }) => {
                         />}
                     {datePickerToggle && <View><DateTimePicker
                         value={selectedApprovedDate}
-                        mode={dateTimePickerMode}
+                        mode="date"
                         display="default"
                         onChange={(event, data) => {
                             setDatePickerToggle(false);

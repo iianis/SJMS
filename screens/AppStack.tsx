@@ -3,16 +3,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './Home';
 import Intro from './Intro';
 import Register from './Register';
-import ServiceAreas from './ServiceAreas';
-import Directors from './Directors';
 import Donations from './Donations';
 import RequestsNew from './RequestsNew';
 import Requests from './Requests';
 import DonationsNew from './DonationsNew';
 import MemberNew from './MemberNew';
 import Matrimonial from './Matrimonial';
-import AlertsNew from './AlertsNew';
-import Alerts from './Alerts';
+import EventsNew from './EventsNew';
+import Events from './Events';
 import Schemes from './Schemes';
 import WorkInProgress from './WorkInProgress';
 import Members from './Members';
@@ -53,15 +51,6 @@ const AppStack = () => {
                 }}
             />
             <Stack.Screen
-                name="ServiceAreas"
-                component={ServiceAreas}
-                options={{
-                    headerShown: true,
-                    title: 'Service Areas',
-                    headerBackTitleVisible: true,
-                }}
-            />
-            <Stack.Screen
                 name="Members"
                 component={Members}
                 options={{
@@ -71,12 +60,12 @@ const AppStack = () => {
                 }}
             />
             <Stack.Screen
-                name="WorkInProgress"
-                component={WorkInProgress}
+                name="MemberNew"
+                component={MemberNew}
                 options={{
                     headerShown: false,
-                    title: 'Work In Progress',
-                    headerBackTitleVisible: true,
+                    title: 'Add Member',
+                    headerBackTitleVisible: false,
                 }}
             />
             <Stack.Screen
@@ -98,8 +87,8 @@ const AppStack = () => {
                 }}
             />
             <Stack.Screen
-                name="Alerts"
-                component={Alerts}
+                name="Events"
+                component={Events}
                 options={{
                     headerShown: true,
                     title: 'Events',
@@ -107,11 +96,11 @@ const AppStack = () => {
                 }}
             />
             <Stack.Screen
-                name="AlertsNew"
-                component={AlertsNew}
+                name="EventsNew"
+                component={EventsNew}
                 options={{
                     headerShown: false,
-                    title: 'Add Alerts',
+                    title: 'Add Events',
                     headerBackTitleVisible: true,
                 }}
             />
@@ -152,15 +141,6 @@ const AppStack = () => {
                 }}
             />
             <Stack.Screen
-                name="MemberNew"
-                component={MemberNew}
-                options={{
-                    headerShown: false,
-                    title: 'Add Member',
-                    headerBackTitleVisible: false,
-                }}
-            />
-            <Stack.Screen
                 name="Matrimonial"
                 component={Matrimonial}
                 options={{
@@ -175,6 +155,15 @@ const AppStack = () => {
                 options={{
                     headerShown: true,
                     title: 'Profile',
+                    headerBackTitleVisible: true,
+                }}
+            />
+            <Stack.Screen
+                name="WorkInProgress"
+                component={WorkInProgress}
+                options={{
+                    headerShown: false,
+                    title: 'Work In Progress',
                     headerBackTitleVisible: true,
                 }}
             />

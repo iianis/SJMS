@@ -5,6 +5,7 @@ export interface IMember {
   phone: string;
   name: string;
   password: string;
+  confirmPassword?: string;
   taluka: string;
   talukaId: number;
   village: string;
@@ -26,6 +27,8 @@ export interface IMember {
   education?: string;
   educationId?: number;
   deleted: boolean;
+  accessLevel: number;
+  isDirector: boolean;
 };
 
 export enum memberTypes1 {

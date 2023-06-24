@@ -19,6 +19,7 @@ const CustomTextInput = ({
     const [isFocused, setIsFocused] = useState(false);
     const [hidePassword, setHidePassword] = useState(password);
     //console.log('textinput ', label, hidePassword, error);
+    //console.log('multiline = multilines = ', multiline, multilines);
 
     return (
         <View style={{ marginBottom: 10 }}>
@@ -32,9 +33,9 @@ const CustomTextInput = ({
                     value={data}
                     secureTextEntry={hidePassword}
                     autoCorrect={false}
-                    maxLength={maxLength ? maxLength : 50}
-                    multiline
                     editable={isEditable}
+                    maxLength={maxLength ? maxLength : 50}
+                    multiline={multiline || false}
                     numberOfLines={multilines}
                     onFocus={() => {
                         onFocus();

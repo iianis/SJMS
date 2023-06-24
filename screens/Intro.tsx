@@ -78,7 +78,7 @@ const Intro = ({ navigation, route }: { navigation: any }) => {
     const cardSelected = (cardName: string) => {
         switch (cardName) {
             case "members": navigation.navigate("Members", { item: null, user: loggedInUser, filter: "Member" }); break;
-            case "events": navigation.navigate("Alerts", { item: null, user: loggedInUser }); break;
+            case "events": navigation.navigate("Events", { item: null, user: loggedInUser }); break;
             case "feesdonations": navigation.navigate("Donations", { item: null, user: loggedInUser }); break;
             case "schemes": navigation.navigate("Schemes", { item: null, user: loggedInUser }); break;
             case "requests": navigation.navigate("Requests", { item: null, user: loggedInUser }); break;
@@ -149,7 +149,7 @@ const Intro = ({ navigation, route }: { navigation: any }) => {
                     <Image source={require('../images/members.jpg')} style={{ height: 200, width: '100%' }} />
                     <View style={styles.cardRow2}>
                         <Text style={[styles.title2, { backgroundColor: '#009387', color: 'white' }]}>
-                            We already have {memberCount} active members with us. Please come and join us to help and at the same time get benefits by being part of our community.
+                            Please come and join us to help and at the same time get benefits by being part of our community.
                         </Text>
                     </View>
                 </TouchableOpacity>

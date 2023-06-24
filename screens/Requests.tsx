@@ -7,6 +7,7 @@ import Search from '../components/Search';
 import firestore from '@react-native-firebase/firestore';
 import CustomFlatList from '../components/CustomFlatList';
 import { dBTable } from '../data/misc';
+import InternetConnected from '../components/InternetConnected';
 
 const Requests = ({ navigation, route }) => {
     const loggedInUser = route.params.user;
@@ -41,14 +42,17 @@ const Requests = ({ navigation, route }) => {
             .get()
             .then(itemsSnapshot => {
                 itemsSnapshot.forEach(doc => {
-                    console.log('loading...2');
+                    //console.log('loading...2');
                     if (doc?.exists) {
                         //console.log('loading...3');
                         let itemDoc = doc.data();
                         itemDoc.id = doc.id;
                         //console.log('loading...31', itemDoc.approvedDate);
-                        if (itemDoc.approvedDate)
-                            itemDoc.approvedDate = itemDoc.approvedDate.toDate().toString();
+                        if (itemDoc.approvedDate) {
+                            //console.log('loading...311');
+                            itemDoc.approvedDate = itemDoc.approvedDate.toString();
+                            //console.log('loading...3111');
+                        }
                         //console.log('loading...32', itemDoc.approvedDate);
                         setItemsData(items => [...items, itemDoc]);
                         setSearchResult(items => [...items, itemDoc]);
@@ -64,6 +68,7 @@ const Requests = ({ navigation, route }) => {
 
     const handleListSelection = (item: any) => {
         //console.log('loading..', item)
+        if (!loggedInUser || !loggedInUser.accessLevel || loggedInUser.accessLevel <= 1) return;
         navigation.navigate(uiDetails.redirectComponent, { item: item, user: loggedInUser });
     };
 
@@ -81,6 +86,7 @@ const Requests = ({ navigation, route }) => {
     return (
         <View style={styles.container}>
             <Loader visible={loading} />
+            <InternetConnected />
             <View>
                 <Search
                     PlaceHolder='Search by Details'

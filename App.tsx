@@ -12,7 +12,7 @@ const App = () => {
   const Stack = createNativeStackNavigator();
   useEffect(() => {
     //getDeviceToken();
-    console.log("requesting Messaging permission");
+    //console.log("requesting Messaging permission");
     //requestUserPermission();
     //PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
   }, []);
